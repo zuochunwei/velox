@@ -187,6 +187,13 @@ uint32_t maxDrivers(const DriverFactory& driverFactory) {
       // ArrowStream node must run single-threaded.
       return 1;
     } else if (
+        auto arrowStream =
+            std::dynamic_pointer_cast<const core::ArrowStreamNode>(node)) {
+      // ArrowStream node must run single-threaded, unless in test context.
+      if (!arrowStream->isParallelizable()) {
+        return 1;
+      }
+    } else if (
         auto limit = std::dynamic_pointer_cast<const core::LimitNode>(node)) {
       // final limit must run single-threaded
       if (!limit->isPartial()) {
