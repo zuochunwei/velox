@@ -98,11 +98,7 @@ class SubstraitVeloxPlanConverter {
   /// Starts: the start positions in byte to read from the items.
   /// Lengths: the lengths in byte to read from the items.
   std::shared_ptr<const core::PlanNode> toVeloxPlan(
-      const ::substrait::ReadRel& sRead,
-      u_int32_t& index,
-      std::vector<std::string>& paths,
-      std::vector<u_int64_t>& starts,
-      std::vector<u_int64_t>& lengths);
+      const ::substrait::ReadRel& sRead);
 
   /// Used to convert Substrait Rel into Velox PlanNode.
   std::shared_ptr<const core::PlanNode> toVeloxPlan(
