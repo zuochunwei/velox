@@ -34,9 +34,16 @@ ArrowStream::~ArrowStream() {
   close();
 }
 
+ArrowStream::~ArrowStream() {
+  if (!isFinished0()) {
+    close0();
+  }
+}
+
 RowVectorPtr ArrowStream::getOutput() {
   // Get Arrow array.
   struct ArrowArray arrowArray;
+
   if (arrowStream_->get_next(arrowStream_.get(), &arrowArray)) {
     if (arrowArray.release) {
       arrowArray.release(&arrowArray);
@@ -52,6 +59,7 @@ RowVectorPtr ArrowStream::getOutput() {
 
   // Get Arrow schema.
   struct ArrowSchema arrowSchema;
+
   if (arrowStream_->get_schema(arrowStream_.get(), &arrowSchema)) {
     if (arrowSchema.release) {
       arrowSchema.release(&arrowSchema);
