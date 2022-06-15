@@ -417,7 +417,6 @@ SubstraitVeloxPlanConverter::processSortField(
 core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
     const ::substrait::FilterRel& filterRel) {
   auto childNode = convertSingleInput<::substrait::FilterRel>(filterRel);
-
   auto filterNode = std::make_shared<core::FilterNode>(
       nextPlanNodeId(),
       exprConverter_->toVeloxExpr(

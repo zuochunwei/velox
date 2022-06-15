@@ -28,7 +28,7 @@ std::shared_ptr<SubstraitParser::SubstraitType> SubstraitParser::parseType(
   switch (substraitType.kind_case()) {
     case ::substrait::Type::KindCase::kBool: {
       typeName = "BOOLEAN";
-      nullability = sType.bool_().nullability();
+      nullability = substraitType.bool_().nullability();
       break;
     }
     case ::substrait::Type::KindCase::kI8: {
