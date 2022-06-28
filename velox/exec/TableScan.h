@@ -98,6 +98,8 @@ class TableScan : public SourceOperator {
   int32_t numReadyPreloadedSplits_{0};
 
   int32_t readBatchSize_{kDefaultBatchSize};
+  // A preferred batch size from configuration.
+  uint32_t preferredBatchSize_;
 
   // String shown in ExceptionContext inside DataSource and LazyVector loading.
   std::string debugString_;
