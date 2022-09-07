@@ -239,7 +239,7 @@ class SubstraitVeloxPlanConverter {
     bool isInitialized_ = false;
 
     // The null allow.
-    bool nullAllowed_ = true;
+    bool nullAllowed_ = false;
 
     // If true, left bound will be exclusive.
     std::vector<bool> lowerExclusives_;
