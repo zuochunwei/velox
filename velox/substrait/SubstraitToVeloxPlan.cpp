@@ -284,7 +284,7 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
               sJoin.advanced_extension(), "isExistenceJoin=")) {
         joinType = core::JoinType::kLeftSemiProject;
       } else {
-        joinType = core::JoinType::kLeftSemi;
+        joinType = core::JoinType::kLeftSemiFilter;
       }
       break;
     case ::substrait::JoinRel_JoinType::JoinRel_JoinType_JOIN_TYPE_RIGHT_SEMI:
@@ -294,7 +294,7 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
               sJoin.advanced_extension(), "isExistenceJoin=")) {
         joinType = core::JoinType::kRightSemiProject;
       } else {
-        joinType = core::JoinType::kRightSemi;
+        joinType = core::JoinType::kRightSemiFilter;
       }
       break;
     case ::substrait::JoinRel_JoinType::JoinRel_JoinType_JOIN_TYPE_ANTI: {
