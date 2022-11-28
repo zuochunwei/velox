@@ -24,6 +24,7 @@
 #include "velox/functions/sparksql/ArraySort.h"
 #include "velox/functions/sparksql/Bitwise.h"
 #include "velox/functions/sparksql/CompareFunctionsNullSafe.h"
+#include "velox/functions/sparksql/DateTime.h"
 #include "velox/functions/sparksql/DateTimeFunctions.h"
 #include "velox/functions/sparksql/Hash.h"
 #include "velox/functions/sparksql/In.h"
@@ -37,9 +38,8 @@
 namespace facebook::velox::functions {
 
 static void workAroundRegistrationMacro(const std::string& prefix) {
-  // VELOX_REGISTER_VECTOR_FUNCTION must be invoked in the same namespace as the
-  // vector function definition.
-  // Higher order functions.
+  // VELOX_REGISTER_VECTOR_FUNCTION must be invoked in the same namespace as
+  // the vector function definition. Higher order functions.
   VELOX_REGISTER_VECTOR_FUNCTION(udf_transform, prefix + "transform");
   VELOX_REGISTER_VECTOR_FUNCTION(udf_reduce, prefix + "aggregate");
   VELOX_REGISTER_VECTOR_FUNCTION(udf_array_filter, prefix + "filter");
@@ -151,6 +151,55 @@ void registerFunctions(const std::string& prefix) {
 
   registerFunction<YearFunction, int32_t, Timestamp>({"year"});
   registerFunction<YearFunction, int32_t, Date>({"year"});
+  // Register DateTime functions.
+  registerFunction<MillisecondFunction, int32_t, Date>(
+      {prefix + "millisecond"});
+  registerFunction<MillisecondFunction, int32_t, Timestamp>(
+      {prefix + "millisecond"});
+  registerFunction<MillisecondFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "millisecond"});
+  registerFunction<SecondFunction, int32_t, Date>({prefix + "second"});
+  registerFunction<SecondFunction, int32_t, Timestamp>({prefix + "second"});
+  registerFunction<SecondFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "second"});
+  registerFunction<MinuteFunction, int32_t, Date>({prefix + "minute"});
+  registerFunction<MinuteFunction, int32_t, Timestamp>({prefix + "minute"});
+  registerFunction<MinuteFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "minute"});
+  registerFunction<HourFunction, int32_t, Date>({prefix + "hour"});
+  registerFunction<HourFunction, int32_t, Timestamp>({prefix + "hour"});
+  registerFunction<HourFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "hour"});
+  registerFunction<DayFunction, int32_t, Date>(
+      {prefix + "day", prefix + "day_of_month"});
+  registerFunction<DayFunction, int32_t, Timestamp>(
+      {prefix + "day", prefix + "day_of_month"});
+  registerFunction<DayFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "day", prefix + "day_of_month"});
+  registerFunction<DayOfWeekFunction, int32_t, Date>({prefix + "day_of_week"});
+  registerFunction<DayOfWeekFunction, int32_t, Timestamp>(
+      {prefix + "day_of_week"});
+  registerFunction<DayOfWeekFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "day_of_week"});
+  registerFunction<DayOfYearFunction, int32_t, Date>({prefix + "day_of_year"});
+  registerFunction<DayOfYearFunction, int32_t, Timestamp>(
+      {prefix + "day_of_year"});
+  registerFunction<DayOfYearFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "day_of_year"});
+  registerFunction<MonthFunction, int32_t, Date>({prefix + "month"});
+  registerFunction<MonthFunction, int32_t, Timestamp>({prefix + "month"});
+  registerFunction<MonthFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "month"});
+  registerFunction<QuarterFunction, int32_t, Date>({prefix + "quarter"});
+  registerFunction<QuarterFunction, int32_t, Timestamp>({prefix + "quarter"});
+  registerFunction<QuarterFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "quarter"});
+  registerFunction<YearOfWeekFunction, int32_t, Date>(
+      {prefix + "year_of_week"});
+  registerFunction<YearOfWeekFunction, int32_t, Timestamp>(
+      {prefix + "year_of_week"});
+  registerFunction<YearOfWeekFunction, int32_t, TimestampWithTimezone>(
+      {prefix + "year_of_week"});
 }
 
 } // namespace sparksql

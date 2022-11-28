@@ -20,6 +20,7 @@ add_executable(
   CompareNullSafeTests.cpp
   DateTimeFunctionsTest.cpp
   ElementAtTest.cpp
+  DateTimeTest.cpp
   HashTest.cpp
   InTest.cpp
   LeastGreatestTest.cpp
