@@ -1749,6 +1749,13 @@ void SubstraitVeloxPlanConverter::setFilterMap(
       setColInfoMap<std::string>(
           functionName, colIdxVal, val, reverse, colInfoMap);
       break;
+    case TypeKind::DATE:
+      if (substraitLit) {
+        val = variant(Date(substraitLit.value().date()));
+      }
+      setColInfoMap<int>(
+          functionName, colIdxVal, val, reverse, colInfoMap);
+      break;
     default:
       VELOX_NYI(
           "Subfield filters creation not supported for input type '{}'",
@@ -2024,6 +2031,10 @@ connector::hive::SubfieldFilters SubstraitVeloxPlanConverter::mapToFilters(
         break;
       case TypeKind::VARCHAR:
         constructSubfieldFilters<TypeKind::VARCHAR, common::Filter>(
+            colIdx, inputNameList[colIdx], colInfoMap[colIdx], filters);
+        break;
+      case TypeKind::DATE:
+        constructSubfieldFilters<TypeKind::DATE, common::BigintRange>(
             colIdx, inputNameList[colIdx], colInfoMap[colIdx], filters);
         break;
       default:
