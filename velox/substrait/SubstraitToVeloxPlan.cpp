@@ -146,8 +146,7 @@ RowTypePtr getJoinOutputType(
   // side.
   bool outputMayIncludeRightColumns =
       !(core::isLeftSemiFilterJoin(joinType) ||
-        core::isLeftSemiProjectJoin(joinType) || core::isAntiJoin(joinType) ||
-        core::isNullAwareAntiJoin(joinType));
+        core::isLeftSemiProjectJoin(joinType) || core::isAntiJoin(joinType));
 
   if (outputMayIncludeLeftColumns && outputMayIncludeRightColumns) {
     return getJoinInputType(leftNode, rightNode);
@@ -335,6 +334,7 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
     return std::make_shared<core::HashJoinNode>(
         nextPlanNodeId(),
         joinType,
+        joinType == core::JoinType::kNullAwareAnti ? true : false,
         leftKeys,
         rightKeys,
         filter,
