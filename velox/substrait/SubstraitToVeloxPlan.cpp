@@ -242,6 +242,7 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
 
   // Map join type.
   core::JoinType joinType;
+  bool isNullAwareAntiJoin = false;
   switch (sJoin.type()) {
     case ::substrait::JoinRel_JoinType::JoinRel_JoinType_JOIN_TYPE_INNER:
       joinType = core::JoinType::kInner;
@@ -280,10 +281,9 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
       if (sJoin.has_advanced_extension() &&
           subParser_->configSetInOptimization(
               sJoin.advanced_extension(), "isNullAwareAntiJoin=")) {
-        joinType = core::JoinType::kNullAwareAnti;
-      } else {
-        joinType = core::JoinType::kAnti;
+        isNullAwareAntiJoin = true;
       }
+      joinType = core::JoinType::kAnti;
       break;
     }
     default:
@@ -334,7 +334,7 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
     return std::make_shared<core::HashJoinNode>(
         nextPlanNodeId(),
         joinType,
-        joinType == core::JoinType::kNullAwareAnti ? true : false,
+        isNullAwareAntiJoin,
         leftKeys,
         rightKeys,
         filter,
