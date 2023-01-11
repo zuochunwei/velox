@@ -29,6 +29,7 @@
 #include "velox/functions/sparksql/Hash.h"
 #include "velox/functions/sparksql/In.h"
 #include "velox/functions/sparksql/LeastGreatest.h"
+#include "velox/functions/sparksql/MightContain.h"
 #include "velox/functions/sparksql/RegexFunctions.h"
 #include "velox/functions/sparksql/RegisterArithmetic.h"
 #include "velox/functions/sparksql/RegisterCompare.h"
@@ -149,8 +150,9 @@ void registerFunctions(const std::string& prefix) {
   exec::registerStatefulVectorFunction(
       prefix + "sort_array", sortArraySignatures(), makeSortArray);
 
-  registerFunction<YearFunction, int32_t, Timestamp>({"year"});
-  registerFunction<YearFunction, int32_t, Date>({"year"});
+  // Register bloom filter function
+  exec::registerStatefulVectorFunction(
+      prefix + "might_contain", mightContainSignatures(), makeMightContain);
   // Register DateTime functions.
   registerFunction<MillisecondFunction, int32_t, Date>(
       {prefix + "millisecond"});
@@ -194,6 +196,8 @@ void registerFunctions(const std::string& prefix) {
   registerFunction<QuarterFunction, int32_t, Timestamp>({prefix + "quarter"});
   registerFunction<QuarterFunction, int32_t, TimestampWithTimezone>(
       {prefix + "quarter"});
+  registerFunction<YearFunction, int32_t, Date>({prefix + "year"});
+  registerFunction<YearFunction, int32_t, Timestamp>({prefix + "year"});
   registerFunction<YearOfWeekFunction, int32_t, Date>(
       {prefix + "year_of_week"});
   registerFunction<YearOfWeekFunction, int32_t, Timestamp>(

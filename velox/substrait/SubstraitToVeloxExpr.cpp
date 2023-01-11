@@ -340,11 +340,8 @@ SubstraitVeloxExprConverter::toVeloxExpr(
           veloxType, variant::null(veloxType->kind()));
     }
     case ::substrait::Expression_Literal::LiteralTypeCase::kDate:
-      // The data of date type is represented by int32 in substrait. So directly
-      // initializing variant with substraitLit.date() can get the type wrongly
-      // parsed.
       return std::make_shared<core::ConstantTypedExpr>(
-          variant(Date(substraitLit.date())));
+          DATE(), variant(Date(substraitLit.date())));
     case ::substrait::Expression_Literal::LiteralTypeCase::kVarChar:
       return std::make_shared<core::ConstantTypedExpr>(
           VARCHAR(), variant(substraitLit.var_char().value()));
@@ -353,9 +350,9 @@ SubstraitVeloxExprConverter::toVeloxExpr(
           BaseVector::wrapInConstant(1, 0, literalsToArrayVector(substraitLit));
       return std::make_shared<const core::ConstantTypedExpr>(constantVector);
     }
-    case ::substrait::Expression_Literal::LiteralTypeCase::kDate:
+    case ::substrait::Expression_Literal::LiteralTypeCase::kBinary:
       return std::make_shared<core::ConstantTypedExpr>(
-          DATE(), variant(Date(substraitLit.date())));
+          VARBINARY(), variant::binary(substraitLit.binary()));
     default:
       VELOX_NYI(
           "Substrait conversion not supported for type case '{}'", typeCase);
