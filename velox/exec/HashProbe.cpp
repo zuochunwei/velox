@@ -1162,12 +1162,6 @@ SelectivityVector HashProbe::evalFilterForNullAwareJoin(
   return filterPassedRows;
 }
 
-// static
-const char* HashProbe::LeftSemiProjectJoinTracker::kPassed = "passed";
-
-// static
-const char* HashProbe::LeftSemiProjectJoinTracker::kNull = "null";
-
 int32_t HashProbe::evalFilter(int32_t numRows) {
   if (!filter_) {
     return numRows;
