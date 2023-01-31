@@ -164,7 +164,10 @@ std::unique_ptr<MetadataFilter::Node> MetadataFilter::Node::fromExpression(
     }
     return std::make_unique<NotNode>(std::move(negated));
   }
-  if (call->name() == "endswith") {
+  if (call->name() == "endswith" || call->name() == "contains" ||
+      call->name() == "like" || call->name() == "startswith" ||
+      call->name() == "in" || call->name() == "rlike" ||
+      call->name() == "isnotnull" || call->name() == "coalesce") {
     return nullptr;
   }
   try {

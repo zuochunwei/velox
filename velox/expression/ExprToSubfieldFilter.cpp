@@ -392,7 +392,7 @@ std::unique_ptr<common::Filter> makeBetweenFilter(
 std::pair<common::Subfield, std::unique_ptr<common::Filter>>
 leafCallToSubfieldFilter(const core::CallTypedExpr& call) {
   using common::Subfield;
-  if (call.name() == "eq") {
+  if (call.name() == "eq" || call.name() == "equalto") {
     if (auto field = asField(&call, 0)) {
       return {toSubfield(field), makeEqualFilter(call.inputs()[1])};
     }
@@ -400,20 +400,20 @@ leafCallToSubfieldFilter(const core::CallTypedExpr& call) {
     if (auto field = asField(&call, 0)) {
       return {toSubfield(field), makeNotEqualFilter(call.inputs()[1])};
     }
-  } else if (call.name() == "lte") {
+  } else if (call.name() == "lte" || call.name() == "lessthanorequal") {
     if (auto field = asField(&call, 0)) {
       return {toSubfield(field), makeLessThanOrEqualFilter(call.inputs()[1])};
     }
-  } else if (call.name() == "lt") {
+  } else if (call.name() == "lt" || call.name() == "lessthan") {
     if (auto field = asField(&call, 0)) {
       return {toSubfield(field), makeLessThanFilter(call.inputs()[1])};
     }
-  } else if (call.name() == "gte") {
+  } else if (call.name() == "gte" || call.name() == "greaterthanorequal") {
     if (auto field = asField(&call, 0)) {
       return {
           toSubfield(field), makeGreaterThanOrEqualFilter(call.inputs()[1])};
     }
-  } else if (call.name() == "gt") {
+  } else if (call.name() == "gt" || call.name() == "greaterthan") {
     if (auto field = asField(&call, 0)) {
       return {toSubfield(field), makeGreaterThanFilter(call.inputs()[1])};
     }
@@ -427,7 +427,7 @@ leafCallToSubfieldFilter(const core::CallTypedExpr& call) {
     if (auto field = asField(&call, 0)) {
       return {toSubfield(field), makeInFilter(call.inputs()[1])};
     }
-  } else if (call.name() == "is_null") {
+  } else if (call.name() == "is_null" || call.name() == "isnull") {
     if (auto field = asField(&call, 0)) {
       return {toSubfield(field), isNull()};
     }
