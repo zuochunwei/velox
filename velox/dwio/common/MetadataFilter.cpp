@@ -164,6 +164,9 @@ std::unique_ptr<MetadataFilter::Node> MetadataFilter::Node::fromExpression(
     }
     return std::make_unique<NotNode>(std::move(negated));
   }
+  if (call->name() == "endswith") {
+    return nullptr;
+  }
   try {
     auto res = exec::leafCallToSubfieldFilter(*call);
     return std::make_unique<LeafNode>(
