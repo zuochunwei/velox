@@ -238,6 +238,7 @@ HiveDataSource::HiveDataSource(
     ExpressionEvaluator* expressionEvaluator,
     memory::MemoryAllocator* allocator,
     const std::string& scanId,
+    bool caseSensitive,
     folly::Executor* executor)
     : outputType_(outputType),
       fileHandleFactory_(fileHandleFactory),
@@ -322,6 +323,8 @@ HiveDataSource::HiveDataSource(
     readerOutputType_ = ROW(std::move(names), std::move(types));
   }
 
+  readerOpts_.setCaseSensitive(caseSensitive);
+
   rowReaderOpts_.setScanSpec(scanSpec_);
   rowReaderOpts_.setMetadataFilter(metadataFilter_);
 
@@ -383,7 +386,8 @@ template <TypeKind ToKind>
 velox::variant convertFromString(const std::optional<std::string>& value) {
   if (value.has_value()) {
     // No need for casting if ToKind is VARCHAR or VARBINARY.
-    if constexpr (ToKind == TypeKind::VARCHAR || ToKind == TypeKind::VARBINARY) {
+    if constexpr (
+        ToKind == TypeKind::VARCHAR || ToKind == TypeKind::VARBINARY) {
       return velox::variant(value.value());
     }
     bool nullOutput = false;
@@ -520,10 +524,7 @@ void HiveDataSource::addSplit(std::shared_ptr<ConnectorSplit> split) {
   scanSpec_->resetCachedValues();
 
   // Check filters and see if the whole split can be skipped
-  if (!testFilters(
-          scanSpec_.get(),
-          reader_.get(),
-          split_->filePath)) {
+  if (!testFilters(scanSpec_.get(), reader_.get(), split_->filePath)) {
     emptySplit_ = true;
     ++runtimeStats_.skippedSplits;
     runtimeStats_.skippedSplitBytes += split_->length;
@@ -542,7 +543,8 @@ void HiveDataSource::addSplit(std::shared_ptr<ConnectorSplit> split) {
     static const RowTypePtr kEmpty{ROW({}, {})};
     cs = std::make_shared<dwio::common::ColumnSelector>(kEmpty);
   } else {
-    cs = std::make_shared<dwio::common::ColumnSelector>(fileType, columnNames);
+    cs = std::make_shared<dwio::common::ColumnSelector>(
+        fileType, columnNames, nullptr, readerOpts_.isCaseSensitive());
   }
 
   rowReader_ = reader_->createRowReader(

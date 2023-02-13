@@ -39,6 +39,9 @@ class HiveConfig {
       const Config* config);
 
   static uint32_t maxPartitionsPerWriters(const Config* config);
+  static constexpr const char* kCaseSensitive = "case_sensitive";
+
+  static bool isCaseSensitive(const Config* config);
 };
 
 } // namespace facebook::velox::connector::hive

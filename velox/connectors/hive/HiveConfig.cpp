@@ -52,4 +52,8 @@ uint32_t HiveConfig::maxPartitionsPerWriters(const Config* config) {
   return config->get<uint32_t>(kMaxPartitionsPerWriters, 100);
 }
 
+bool HiveConfig::isCaseSensitive(const Config* config) {
+  return config->get<bool>(kCaseSensitive, true);
+}
+
 } // namespace facebook::velox::connector::hive
