@@ -27,7 +27,7 @@ class BloomFilterTest : public ::testing::Test {};
 
 TEST_F(BloomFilterTest, basic) {
   constexpr int32_t kSize = 1024;
-  BloomFilter<int32_t> bloom;
+  BloomFilter bloom;
   bloom.reset(kSize);
   for (auto i = 0; i < kSize; ++i) {
     bloom.insert(folly::hasher<int32_t>()(i));

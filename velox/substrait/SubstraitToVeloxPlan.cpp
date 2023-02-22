@@ -205,14 +205,14 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::processEmit(
 }
 
 core::AggregationNode::Step SubstraitVeloxPlanConverter::toAggregationStep(
-    const ::substrait::AggregateRel& sAgg) {
-  if (sAgg.measures().size() == 0) {
+    const ::substrait::AggregateRel& aggRel) {
+  if (aggRel.measures().size() == 0) {
     // When only groupings exist, set the phase to be Single.
     return core::AggregationNode::Step::kSingle;
   }
 
   // Use the first measure to set aggregation phase.
-  const auto& firstMeasure = sAgg.measures()[0];
+  const auto& firstMeasure = aggRel.measures()[0];
   const auto& aggFunction = firstMeasure.measure();
   switch (aggFunction.phase()) {
     case ::substrait::AGGREGATION_PHASE_INITIAL_TO_INTERMEDIATE:
@@ -345,14 +345,14 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
 }
 
 core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
-    const ::substrait::AggregateRel& sAgg) {
-  auto childNode = convertSingleInput<::substrait::AggregateRel>(sAgg);
-  core::AggregationNode::Step aggStep = toAggregationStep(sAgg);
-  return toVeloxAgg(sAgg, childNode, aggStep);
+    const ::substrait::AggregateRel& aggRel) {
+  auto childNode = convertSingleInput<::substrait::AggregateRel>(aggRel);
+  core::AggregationNode::Step aggStep = toAggregationStep(aggRel);
+  return toVeloxAgg(aggRel, childNode, aggStep);
 }
 
 std::shared_ptr<const core::PlanNode> SubstraitVeloxPlanConverter::toVeloxAgg(
-    const ::substrait::AggregateRel& sAgg,
+    const ::substrait::AggregateRel& aggRel,
     const std::shared_ptr<const core::PlanNode>& childNode,
     const core::AggregationNode::Step& aggStep) {
   const auto& inputType = childNode->outputType();
@@ -360,7 +360,7 @@ std::shared_ptr<const core::PlanNode> SubstraitVeloxPlanConverter::toVeloxAgg(
       veloxGroupingExprs;
 
   // Get the grouping expressions.
-  for (const auto& grouping : sAgg.groupings()) {
+  for (const auto& grouping : aggRel.groupings()) {
     for (const auto& groupingExpr : grouping.grouping_expressions()) {
       // Velox's groupings are limited to be Field.
       veloxGroupingExprs.emplace_back(
@@ -371,10 +371,10 @@ std::shared_ptr<const core::PlanNode> SubstraitVeloxPlanConverter::toVeloxAgg(
   // Parse measures and get the aggregate expressions.
   // Each measure represents one aggregate expression.
   std::vector<core::CallTypedExprPtr> aggExprs;
-  aggExprs.reserve(sAgg.measures().size());
+  aggExprs.reserve(aggRel.measures().size());
   std::vector<core::FieldAccessTypedExprPtr> aggregateMasks;
-  aggregateMasks.reserve(sAgg.measures().size());
-  for (const auto& smea : sAgg.measures()) {
+  aggregateMasks.reserve(aggRel.measures().size());
+  for (const auto& smea : aggRel.measures()) {
     core::FieldAccessTypedExprPtr aggregateMask;
     ::substrait::Expression substraitAggMask = smea.filter();
     // Get Aggregation Masks.
@@ -413,9 +413,9 @@ std::shared_ptr<const core::PlanNode> SubstraitVeloxPlanConverter::toVeloxAgg(
 
   // Get the output names of Aggregation.
   std::vector<std::string> aggOutNames;
-  aggOutNames.reserve(sAgg.measures().size());
+  aggOutNames.reserve(aggRel.measures().size());
   for (int idx = veloxGroupingExprs.size();
-       idx < veloxGroupingExprs.size() + sAgg.measures().size();
+       idx < veloxGroupingExprs.size() + aggRel.measures().size();
        idx++) {
     aggOutNames.emplace_back(subParser_->makeNodeName(planNodeId_, idx));
   }
@@ -732,6 +732,9 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
       childNode);
 }
 
+std::pair<
+    std::vector<core::FieldAccessTypedExprPtr>,
+    std::vector<core::SortOrder>>
 SubstraitVeloxPlanConverter::processSortField(
     const ::google::protobuf::RepeatedPtrField<::substrait::SortField>&
         sortFields,
@@ -1000,7 +1003,7 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
   auto outputType = ROW(std::move(outNames), std::move(veloxTypeList));
 
   if (readRel.has_virtual_table()) {
-    return toVeloxPlan(sRead, outputType);
+    return toVeloxPlan(readRel, outputType);
   } else {
     auto tableScanNode = std::make_shared<core::TableScanNode>(
         nextPlanNodeId(),

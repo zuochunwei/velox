@@ -16,7 +16,6 @@
 
 #include "velox/functions/sparksql/aggregates/BloomFilterAggAggregate.h"
 
-#include <fmt/format.h>
 #include "velox/common/base/BloomFilter.h"
 #include "velox/exec/Aggregate.h"
 #include "velox/expression/FunctionSignature.h"
@@ -25,36 +24,37 @@
 namespace facebook::velox::functions::sparksql::aggregates {
 
 namespace {
+
 struct BloomFilterAccumulator {
+  explicit BloomFilterAccumulator(HashStringAllocator* allocator)
+      : bloomFilter_{StlAllocator<uint64_t>(allocator)} {}
+
   int32_t serializedSize() {
-    return bloomFilter.serializedSize();
+    return bloomFilter_.serializedSize();
   }
 
   void serialize(StringView& output) {
-    return bloomFilter.serialize(output);
-  }
-
-  void deserialize(
-      StringView& serialized,
-      BloomFilter<int64_t, false>& output) {
-    BloomFilter<int64_t, false>::deserialize(serialized.data(), output);
+    return bloomFilter_.serialize(const_cast<char*>(output.data()));
   }
 
   void mergeWith(StringView& serialized) {
-    BloomFilter<int64_t, false> output;
-    deserialize(serialized, output);
-    bloomFilter.merge(output);
+    bloomFilter_.merge(serialized.data());
   }
 
   void init(int32_t capacity) {
-    if (!bloomFilter.isSet()) {
-      bloomFilter.reset(capacity);
+    if (!bloomFilter_.isSet()) {
+      bloomFilter_.reset(capacity);
     }
   }
 
-  BloomFilter<int64_t, false> bloomFilter;
-};
+  void insert(int64_t value) {
+    bloomFilter_.insert(folly::hasher<int64_t>()(value));
+  }
 
+  BloomFilter<StlAllocator<uint64_t>> bloomFilter_;
+}; // namespace
+
+template <typename T>
 class BloomFilterAggAggregate : public exec::Aggregate {
  public:
   explicit BloomFilterAggAggregate(const TypePtr& resultType)
@@ -64,13 +64,17 @@ class BloomFilterAggAggregate : public exec::Aggregate {
     return sizeof(BloomFilterAccumulator);
   }
 
+  bool isFixedSize() const override {
+    return false;
+  }
+
   /// Initialize each group.
   void initializeNewGroups(
       char** groups,
       folly::Range<const vector_size_t*> indices) override {
     setAllNulls(groups, indices);
     for (auto i : indices) {
-      new (groups[i] + offset_) BloomFilterAccumulator();
+      new (groups[i] + offset_) BloomFilterAccumulator(allocator_);
     }
   }
 
@@ -86,7 +90,7 @@ class BloomFilterAggAggregate : public exec::Aggregate {
     rows.applyToSelected([&](vector_size_t row) {
       auto accumulator = value<BloomFilterAccumulator>(groups[row]);
       accumulator->init(capacity_);
-      accumulator->bloomFilter.insert(decodedRaw_.valueAt<int64_t>(row));
+      accumulator->insert(decodedRaw_.valueAt<int64_t>(row));
     });
   }
 
@@ -120,12 +124,12 @@ class BloomFilterAggAggregate : public exec::Aggregate {
     if (decodedRaw_.isConstantMapping()) {
       // all values are same, just do for the first
       accumulator->init(capacity_);
-      accumulator->bloomFilter.insert(decodedRaw_.valueAt<int64_t>(0));
+      accumulator->insert(decodedRaw_.valueAt<int64_t>(0));
       return;
     }
     rows.applyToSelected([&](vector_size_t row) {
       accumulator->init(capacity_);
-      accumulator->bloomFilter.insert(decodedRaw_.valueAt<int64_t>(row));
+      accumulator->insert(decodedRaw_.valueAt<int64_t>(row));
     });
   }
 
@@ -154,10 +158,9 @@ class BloomFilterAggAggregate : public exec::Aggregate {
     flatResult->resize(numGroups);
     for (vector_size_t i = 0; i < numGroups; ++i) {
       auto group = groups[i];
-      VELOX_CHECK_NOT_NULL(group);
       auto accumulator = value<BloomFilterAccumulator>(group);
       auto size = accumulator->serializedSize();
-      if (UNLIKELY(!accumulator->bloomFilter.isSet())) {
+      if (UNLIKELY(!accumulator->bloomFilter_.isSet())) {
         flatResult->setNull(i, true);
         continue;
       }
@@ -274,7 +277,7 @@ bool registerBloomFilterAggAggregate(const std::string& name) {
           core::AggregationNode::Step step,
           const std::vector<TypePtr>& argTypes,
           const TypePtr& resultType) -> std::unique_ptr<exec::Aggregate> {
-        return std::make_unique<BloomFilterAggAggregate>(resultType);
+        return std::make_unique<BloomFilterAggAggregate<uint64_t>>(resultType);
       });
 }
 } // namespace facebook::velox::functions::sparksql::aggregates

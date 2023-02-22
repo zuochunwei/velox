@@ -35,12 +35,6 @@ ArrowStream::~ArrowStream() {
   close();
 }
 
-ArrowStream::~ArrowStream() {
-  if (!isFinished0()) {
-    close0();
-  }
-}
-
 RowVectorPtr ArrowStream::getOutput() {
   // Get Arrow array.
   struct ArrowArray arrowArray;

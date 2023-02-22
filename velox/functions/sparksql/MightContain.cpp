@@ -16,10 +16,9 @@
 #include "velox/functions/sparksql/MightContain.h"
 
 #include "velox/common/base/BloomFilter.h"
+#include "velox/common/memory/HashStringAllocator.h"
 #include "velox/expression/DecodedArgs.h"
 #include "velox/vector/FlatVector.h"
-
-#include <glog/logging.h>
 
 namespace facebook::velox::functions::sparksql {
 namespace {
@@ -45,21 +44,24 @@ class BloomFilterMightContainFunction final : public exec::VectorFunction {
       return;
     }
 
+    HashStringAllocator allocator{context.pool()};
     if (serialized->isConstantMapping()) {
-      BloomFilter<int64_t, false> output;
-      auto serializedBloom = serialized->valueAt<StringView>(0);
-      BloomFilter<int64_t, false>::deserialize(serializedBloom.data(), output);
+      BloomFilter output{StlAllocator<uint64_t>(&allocator)};
+      output.merge(serialized->valueAt<StringView>(0).data());
       rows.applyToSelected([&](int row) {
-        result.set(row, output.mayContain(value->valueAt<int64_t>(row)));
+        auto contain = output.mayContain(
+            folly::hasher<int64_t>()(value->valueAt<int64_t>(row)));
+        result.set(row, contain);
       });
       return;
     }
 
     rows.applyToSelected([&](int row) {
-      BloomFilter<int64_t, false> output;
-      auto serializedBloom = serialized->valueAt<StringView>(row);
-      BloomFilter<int64_t, false>::deserialize(serializedBloom.data(), output);
-      result.set(row, output.mayContain(value->valueAt<int64_t>(row)));
+      BloomFilter output{StlAllocator<uint64_t>(&allocator)};
+      output.merge(serialized->valueAt<StringView>(0).data());
+      auto contain = output.mayContain(
+          folly::hasher<int64_t>()(value->valueAt<int64_t>(row)));
+      result.set(row, contain);
     });
   }
 };
@@ -76,9 +78,9 @@ std::vector<std::shared_ptr<exec::FunctionSignature>> mightContainSignatures() {
 std::shared_ptr<exec::VectorFunction> makeMightContain(
     const std::string& name,
     const std::vector<exec::VectorFunctionArg>& inputArgs) {
-  static const auto kHashFunction =
+  static const auto kMightContainFunction =
       std::make_shared<BloomFilterMightContainFunction>();
-  return kHashFunction;
+  return kMightContainFunction;
 }
 
 } // namespace facebook::velox::functions::sparksql

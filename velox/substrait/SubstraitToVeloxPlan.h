@@ -113,13 +113,6 @@ class SubstraitVeloxPlanConverter {
     return splitInfoMap_;
   }
 
-  /// Looks up a function by ID and returns function name if found. Throws if
-  /// function with specified ID doesn't exist. Returns a compound
-  /// function specification consisting of the function name and the input
-  /// types. The format is as follows: <function
-  /// name>:<arg_type0>_<arg_type1>_..._<arg_typeN>
-  const std::string& findFunction(uint64_t id) const;
-
   /// Integrate Substrait emit feature. Here a given 'substrait::RelCommon'
   /// is passed and check if emit is defined for this relation. Basically a
   /// ProjectNode is added on top of 'noEmitNode' to represent output order
@@ -129,10 +122,15 @@ class SubstraitVeloxPlanConverter {
       const ::substrait::RelCommon& relCommon,
       const core::PlanNodePtr& noEmitNode);
 
- private:
-  /// Returns unique ID to use for plan node. Produces sequential numbers
-  /// starting from zero.
-  std::string nextPlanNodeId();
+  /// Used to insert certain plan node as input. The plan node
+  /// id will start from the setted one.
+  void insertInputNode(
+      uint64_t inputIdx,
+      const std::shared_ptr<const core::PlanNode>& inputNode,
+      int planNodeId) {
+    inputNodesMap_[inputIdx] = inputNode;
+    planNodeId_ = planNodeId;
+  }
 
   /// Used to check if ReadRel specifies an input of stream.
   /// If yes, the index of input stream will be returned.
@@ -333,8 +331,8 @@ class SubstraitVeloxPlanConverter {
           sortField,
       const RowTypePtr& inputType);
 
-  /// A function returning current function id and adding the plan node id by
-  /// one once called.
+  /// Returns unique ID to use for plan node. Produces sequential numbers
+  /// starting from zero.
   std::string nextPlanNodeId();
 
   /// Returns whether the args of a scalar function being field or

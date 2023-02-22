@@ -16,7 +16,6 @@
 #include "velox/core/PlanNode.h"
 #include "velox/exec/Operator.h"
 
-
 /// These definition should be included by user from either
 ///   1. <arrow/c/abi.h> or
 ///   2. "velox/vector/arrow/Abi.h"
@@ -33,8 +32,6 @@ class ArrowStream : public SourceOperator {
 
   virtual ~ArrowStream();
 
-  virtual ~ArrowStream();
-
   RowVectorPtr getOutput() override;
 
   BlockingReason isBlocked(ContinueFuture* /* unused */) override {
@@ -43,7 +40,6 @@ class ArrowStream : public SourceOperator {
 
   bool isFinished() override;
 
-  bool isFinished() override;
   void close() override;
 
  private:
@@ -52,11 +48,6 @@ class ArrowStream : public SourceOperator {
 
   bool finished_ = false;
   std::shared_ptr<ArrowArrayStream> arrowStream_;
-  memory::MemoryPool* pool_;
-
-  // For calls from destructor
-  bool isFinished0();
-  void close0();
 };
 
 } // namespace facebook::velox::exec
