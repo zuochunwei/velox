@@ -189,7 +189,8 @@ class SubstraitVeloxPlanConverter {
     /// existing conditions for this field.
     bool setLeftBound(bool forOrRelation = false) {
       if (forOrRelation) {
-        return true;
+        if (!rightBound_) leftBound_ = true;
+        return !rightBound_;
       }
       if (leftBound_ || inRange_ || multiRange_) {
         return false;
@@ -202,7 +203,8 @@ class SubstraitVeloxPlanConverter {
     /// existing conditions for this field.
     bool setRightBound(bool forOrRelation = false) {
       if (forOrRelation) {
-        return true;
+        if (!leftBound_) rightBound_ = true;
+        return !leftBound_;
       }
       if (rightBound_ || inRange_ || multiRange_) {
         return false;
