@@ -376,21 +376,18 @@ std::shared_ptr<const core::PlanNode> SubstraitVeloxPlanConverter::toVeloxAgg(
   aggregateMasks.reserve(aggRel.measures().size());
   for (const auto& smea : aggRel.measures()) {
     core::FieldAccessTypedExprPtr aggregateMask;
-    ::substrait::Expression substraitAggMask = smea.filter();
     // Get Aggregation Masks.
-    if (smea.has_filter()) {
-      if (substraitAggMask.ByteSizeLong() == 0) {
-        aggregateMask = {};
-      } else {
-        aggregateMask =
-            std::dynamic_pointer_cast<const core::FieldAccessTypedExpr>(
-                exprConverter_->toVeloxExpr(substraitAggMask, inputType));
-        VELOX_CHECK(
-            aggregateMask != nullptr,
-            " the agg filter expression in Aggregate Operator only support field");
-      }
-      aggregateMasks.push_back(aggregateMask);
+    if (!smea.has_filter()) {
+      aggregateMask = {};
+    } else {
+      aggregateMask =
+          std::dynamic_pointer_cast<const core::FieldAccessTypedExpr>(
+              exprConverter_->toVeloxExpr(smea.filter(), inputType));
+      VELOX_CHECK(
+          aggregateMask != nullptr,
+          " the agg filter expression in Aggregate Operator only support field");
     }
+    aggregateMasks.push_back(aggregateMask);
     const auto& aggFunction = smea.measure();
     std::string funcName = subParser_->findVeloxFunction(
         functionMap_, aggFunction.function_reference());
