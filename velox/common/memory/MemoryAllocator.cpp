@@ -104,8 +104,8 @@ class MallocAllocator : public MemoryAllocator {
 
   ~MallocAllocator() {
     if (numAllocated_ != 0 || numMapped_ != 0) {
-      std::cout << toString()
-    };
+      std::cout << toString() << std::endl;
+    }
   }
 
   Kind kind() const override {
