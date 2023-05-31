@@ -451,28 +451,28 @@ std::unique_ptr<common::Filter> leafCallToSubfieldFilter(
     common::Subfield& subfield,
     core::ExpressionEvaluator* evaluator,
     bool negated) {
-  if (call.name() == "eq") {
+  if (call.name() == "eq" || call.name() == "equalto") {
     if (auto field = asField(&call, 0)) {
       if (toSubfield(field, subfield)) {
         return negated ? makeNotEqualFilter(call.inputs()[1], evaluator)
                        : makeEqualFilter(call.inputs()[1], evaluator);
       }
     }
-  } else if (call.name() == "neq") {
+  } else if (call.name() == "neq" || call.name() == "notequalto") {
     if (auto field = asField(&call, 0)) {
       if (toSubfield(field, subfield)) {
         return negated ? makeEqualFilter(call.inputs()[1], evaluator)
                        : makeNotEqualFilter(call.inputs()[1], evaluator);
       }
     }
-  } else if (call.name() == "lte") {
+  } else if (call.name() == "lte" || call.name() == "lessthanorequal") {
     if (auto field = asField(&call, 0)) {
       if (toSubfield(field, subfield)) {
         return negated ? makeGreaterThanFilter(call.inputs()[1], evaluator)
                        : makeLessThanOrEqualFilter(call.inputs()[1], evaluator);
       }
     }
-  } else if (call.name() == "lt") {
+  } else if (call.name() == "lt" || call.name() == "lessthan") {
     if (auto field = asField(&call, 0)) {
       if (toSubfield(field, subfield)) {
         return negated
@@ -480,7 +480,7 @@ std::unique_ptr<common::Filter> leafCallToSubfieldFilter(
             : makeLessThanFilter(call.inputs()[1], evaluator);
       }
     }
-  } else if (call.name() == "gte") {
+  } else if (call.name() == "gte" || call.name() == "greaterthanorequal") {
     if (auto field = asField(&call, 0)) {
       if (toSubfield(field, subfield)) {
         return negated
@@ -488,7 +488,7 @@ std::unique_ptr<common::Filter> leafCallToSubfieldFilter(
             : makeGreaterThanOrEqualFilter(call.inputs()[1], evaluator);
       }
     }
-  } else if (call.name() == "gt") {
+  } else if (call.name() == "gt" || call.name() == "greaterthan") {
     if (auto field = asField(&call, 0)) {
       if (toSubfield(field, subfield)) {
         return negated ? makeLessThanOrEqualFilter(call.inputs()[1], evaluator)
@@ -508,7 +508,7 @@ std::unique_ptr<common::Filter> leafCallToSubfieldFilter(
         return makeInFilter(call.inputs()[1], evaluator, negated);
       }
     }
-  } else if (call.name() == "is_null") {
+  } else if (call.name() == "is_null" || call.name() == "isnull") {
     if (auto field = asField(&call, 0)) {
       if (toSubfield(field, subfield)) {
         if (negated) {
