@@ -422,7 +422,7 @@ TypePtr ReaderBase::convertType(
       case thrift::Type::type::INT64:
         return BIGINT();
       case thrift::Type::type::INT96:
-        return DOUBLE(); // TODO: Lose precision
+        return TIMESTAMP();
       case thrift::Type::type::FLOAT:
         return REAL();
       case thrift::Type::type::DOUBLE:
@@ -571,7 +571,11 @@ void ParquetRowReader::filterRowGroups() {
     auto fileOffset = rowGroups_[i].__isset.file_offset
         ? rowGroups_[i].file_offset
         : rowGroups_[i].columns[0].file_offset;
-    VELOX_CHECK_GT(fileOffset, 0);
+    VELOX_CHECK_GE(fileOffset, 0);
+    if (fileOffset == 0) {
+      rowGroupIds_.push_back(i);
+      continue;
+    }
     auto rowGroupInRange =
         (fileOffset >= options_.getOffset() &&
          fileOffset < options_.getLimit());
@@ -640,6 +644,7 @@ bool ParquetRowReader::advanceToNextRowGroup() {
 void ParquetRowReader::updateRuntimeStats(
     dwio::common::RuntimeStatistics& stats) const {
   stats.skippedStrides += skippedRowGroups_;
+  stats.processedStrides += rowGroupIds_.size();
 }
 
 void ParquetRowReader::resetFilterCaches() {
