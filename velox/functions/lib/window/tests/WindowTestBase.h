@@ -153,6 +153,8 @@ class WindowTestBase : public exec::test::OperatorTestBase {
       const std::vector<std::string>& frameClauses = {""},
       bool createTable = true);
 
+  void testKRangeFrames(const std::string& function);
+
   /// This function tests the SQL query for the window function and overClause
   /// combination with the input RowVectors. It is expected that query execution
   /// will throw an exception with the errorMessage specified.
