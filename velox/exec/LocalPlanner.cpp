@@ -20,6 +20,7 @@
 #include "velox/exec/CallbackSink.h"
 #include "velox/exec/EnforceSingleRow.h"
 #include "velox/exec/Exchange.h"
+#include "velox/exec/Expand.h"
 #include "velox/exec/FilterProject.h"
 #include "velox/exec/GroupId.h"
 #include "velox/exec/HashAggregation.h"
@@ -40,6 +41,7 @@
 #include "velox/exec/TopN.h"
 #include "velox/exec/TopNRowNumber.h"
 #include "velox/exec/Unnest.h"
+#include "velox/exec/ValueStream.h"
 #include "velox/exec/Values.h"
 #include "velox/exec/Window.h"
 
@@ -186,6 +188,9 @@ uint32_t maxDrivers(const DriverFactory& driverFactory) {
       if (!values->isParallelizable()) {
         return 1;
       }
+    } else if (std::dynamic_pointer_cast<const core::ValueStreamNode>(node)) {
+      // ValueStream node must run single-threaded.
+      return 1;
     } else if (std::dynamic_pointer_cast<const core::ArrowStreamNode>(node)) {
       // ArrowStream node must run single-threaded.
       return 1;
@@ -403,6 +408,11 @@ std::shared_ptr<Driver> DriverFactory::createDriver(
             std::dynamic_pointer_cast<const core::ValuesNode>(planNode)) {
       operators.push_back(std::make_unique<Values>(id, ctx.get(), valuesNode));
     } else if (
+        auto valueStreamNode =
+            std::dynamic_pointer_cast<const core::ValueStreamNode>(planNode)) {
+      operators.push_back(
+          std::make_unique<ValueStream>(id, ctx.get(), valueStreamNode));
+    } else if (
         auto arrowStreamNode =
             std::dynamic_pointer_cast<const core::ArrowStreamNode>(planNode)) {
       operators.push_back(
@@ -458,6 +468,10 @@ std::shared_ptr<Driver> DriverFactory::createDriver(
         operators.push_back(
             std::make_unique<HashAggregation>(id, ctx.get(), aggregationNode));
       }
+    } else if (
+        auto expandNode =
+            std::dynamic_pointer_cast<const core::ExpandNode>(planNode)) {
+      operators.push_back(std::make_unique<Expand>(id, ctx.get(), expandNode));
     } else if (
         auto groupIdNode =
             std::dynamic_pointer_cast<const core::GroupIdNode>(planNode)) {

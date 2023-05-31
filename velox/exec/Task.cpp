@@ -873,10 +873,10 @@ void Task::removeDriver(std::shared_ptr<Task> self, Driver* driver) {
     }
 
     if (self->numFinishedDrivers_ == self->numTotalDrivers_) {
-      LOG(INFO) << "All drivers (" << self->numFinishedDrivers_
+      /*LOG(INFO) << "All drivers (" << self->numFinishedDrivers_
                 << ") finished for task " << self->taskId()
                 << " after running for " << self->timeSinceStartMsLocked()
-                << " ms.";
+                << " ms.";*/
     }
   }
 
@@ -1554,9 +1554,9 @@ ContinueFuture Task::terminate(TaskState terminalState) {
       }
     }
 
-    LOG(INFO) << "Terminating task " << taskId() << " with state "
+    /*LOG(INFO) << "Terminating task " << taskId() << " with state "
               << taskStateString(state_) << " after running for "
-              << timeSinceStartMsLocked() << " ms.";
+              << timeSinceStartMsLocked() << " ms.";*/
 
     activateTaskCompletionNotifier(completionNotifier);
 

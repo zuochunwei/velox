@@ -24,6 +24,7 @@ add_library(
   Driver.cpp
   EnforceSingleRow.cpp
   Exchange.cpp
+  Expand.cpp
   FilterProject.cpp
   GroupId.cpp
   GroupingSet.cpp
@@ -63,6 +64,7 @@ add_library(
   TopNRowNumber.cpp
   Unnest.cpp
   Values.cpp
+  ValueStream.cpp
   VectorHasher.cpp
   Window.cpp
   WindowFunction.cpp
