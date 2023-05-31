@@ -129,5 +129,4 @@ std::string HiveConfig::s3IAMRoleSessionName(const Config* config) {
 bool HiveConfig::isFileColumnNamesReadAsLowerCase(const Config* config) {
   return config->get<bool>(kFileColumnNamesReadAsLowerCase, false);
 }
-
 } // namespace facebook::velox::connector::hive

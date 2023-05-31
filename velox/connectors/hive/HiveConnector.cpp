@@ -19,6 +19,7 @@
 #include "velox/common/base/Fs.h"
 #include "velox/connectors/hive/HivePartitionFunction.h"
 #include "velox/expression/FieldReference.h"
+#include "velox/type/DecimalUtilOp.h"
 
 #include <boost/lexical_cast.hpp>
 #include <memory>
