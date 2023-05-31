@@ -105,7 +105,8 @@ exec::AggregateRegistrationResult registerBitwise(const std::string& name) {
                 name,
                 inputType->kindName());
         }
-      });
+      },
+      true);
 }
 
 } // namespace facebook::velox::functions::aggregate

@@ -120,6 +120,14 @@ class StringTest : public SparkFunctionBaseTest {
     return evaluateOnce<bool>("contains(c0, c1)", str, pattern);
   }
 
+  std::optional<std::string> substring_index(
+      const std::optional<std::string>& str,
+      const std::optional<std::string>& delim,
+      int32_t count) {
+    return evaluateOnce<std::string, std::string, std::string, int32_t>(
+        "substring_index(c0, c1, c2)", str, delim, count);
+  }
+
   std::optional<std::string> substring(
       std::optional<std::string> str,
       std::optional<int32_t> start) {
@@ -157,22 +165,38 @@ class StringTest : public SparkFunctionBaseTest {
         pos,
         len);
   }
+
+  std::optional<std::string> replace(
+      std::optional<std::string> str,
+      std::optional<std::string> replaced,
+      std::optional<std::string> replacement) {
+    return evaluateOnce<std::string>(
+        "replace(c0, c1, c2)", str, replaced, replacement);
+  }
 };
 
 TEST_F(StringTest, Ascii) {
   EXPECT_EQ(ascii(std::string("\0", 1)), 0);
   EXPECT_EQ(ascii(" "), 32);
-  EXPECT_EQ(ascii("😋"), -16);
+  EXPECT_EQ(ascii("😋"), 128523);
   EXPECT_EQ(ascii(""), 0);
+  EXPECT_EQ(ascii("¥"), 165);
+  EXPECT_EQ(ascii("®"), 174);
+  EXPECT_EQ(ascii("©"), 169);
   EXPECT_EQ(ascii(std::nullopt), std::nullopt);
 }
 
 TEST_F(StringTest, Chr) {
-  EXPECT_EQ(chr(0), std::string("\0", 1));
-  EXPECT_EQ(chr(32), " ");
   EXPECT_EQ(chr(-16), "");
-  EXPECT_EQ(chr(256), std::string("\0", 1));
-  EXPECT_EQ(chr(256 + 32), std::string(" ", 1));
+  EXPECT_EQ(chr(0), std::string("\0", 1));
+  EXPECT_EQ(chr(0x100), std::string("\0", 1));
+  EXPECT_EQ(chr(0x1100), std::string("\0", 1));
+  EXPECT_EQ(chr(0x20), "\x20");
+  EXPECT_EQ(chr(0x100 + 0x20), "\x20");
+  EXPECT_EQ(chr(0x80), "\xC2\x80");
+  EXPECT_EQ(chr(0x100 + 0x80), "\xC2\x80");
+  EXPECT_EQ(chr(0xFF), "\xC3\xBF");
+  EXPECT_EQ(chr(0x100 + 0xFF), "\xC3\xBF");
   EXPECT_EQ(chr(std::nullopt), std::nullopt);
 }
 
@@ -320,6 +344,27 @@ TEST_F(StringTest, endsWith) {
   EXPECT_EQ(endsWith("-- hello there!", "hello there"), false);
   EXPECT_EQ(endsWith("-- hello there!", std::nullopt), std::nullopt);
   EXPECT_EQ(endsWith(std::nullopt, "abc"), std::nullopt);
+}
+
+TEST_F(StringTest, substring_index) {
+  // Zero count.
+  EXPECT_EQ(substring_index("Abcd.ef.gH", ".", 0), "");
+  // Positive count.
+  EXPECT_EQ(substring_index("Abcd.ef.gH", ".", 1), "Abcd");
+  EXPECT_EQ(substring_index("Abcd.ef.gH", ".", 2), "Abcd.ef");
+  EXPECT_EQ(substring_index("Abcd.ef.gH", ".", 3), "Abcd.ef.gH");
+  EXPECT_EQ(substring_index("Abcd.ef.gH", "Abcd", 1), "");
+  // Negative count.
+  EXPECT_EQ(substring_index("Abcd.ef.gH", ".", -1), "gH");
+  EXPECT_EQ(substring_index("Abcd.ef.gH", ".", -2), "ef.gH");
+  EXPECT_EQ(substring_index("Abcd.ef.gH", "ef", -1), ".gH");
+  EXPECT_EQ(substring_index("Abcd.ef.gH", "gH", -1), "");
+  // Test for case sensitivity.
+  EXPECT_EQ(substring_index("Ab|AB|ab", "ab", 1), "Ab|AB|");
+  EXPECT_EQ(substring_index("Ab|AB|ab", "ab", 2), "Ab|AB|ab");
+  // Test for string with escape character.
+  EXPECT_EQ(substring_index("Abc\\ABc\\ab", "\\", 1), "Abc");
+  EXPECT_EQ(substring_index("Abc\\ABc\\ab", "\\", 2), "Abc\\ABc");
 }
 
 TEST_F(StringTest, trim) {
@@ -477,6 +522,20 @@ TEST_F(StringTest, overlayVarbinary) {
   EXPECT_EQ(overlayVarbinary("Spark SQL", "##", 0, 4), "##rk SQL");
   EXPECT_EQ(overlayVarbinary("Spark SQL", "##", -10, -1), "##park SQL");
   EXPECT_EQ(overlayVarbinary("Spark SQL", "##", -10, 4), "##rk SQL");
+}
+
+TEST_F(StringTest, replace) {
+  EXPECT_EQ(replace("aaabaac", "a", "z"), "zzzbzzc");
+  EXPECT_EQ(replace("aaabaac", "", "z"), "aaabaac");
+  EXPECT_EQ(replace("aaabaac", "a", ""), "bc");
+  EXPECT_EQ(replace("aaabaac", "x", "z"), "aaabaac");
+  EXPECT_EQ(replace("aaabaac", "ab", "z"), "aazaac");
+  EXPECT_EQ(replace("aaabaac", "aa", "z"), "zabzc");
+  EXPECT_EQ(replace("aaabaac", "aa", "xyz"), "xyzabxyzc");
+  EXPECT_EQ(replace("aaabaac", "aaabaac", "z"), "z");
+  EXPECT_EQ(
+      replace("123\u6570\u6570\u636E", "\u6570\u636E", "data"),
+      "123\u6570data");
 }
 
 } // namespace
