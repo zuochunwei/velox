@@ -204,6 +204,7 @@ ReaderBase::ReaderBase(
           postScript_->cacheMode(), *footer_, std::move(cacheBuffer));
     }
   }
+
   if (!cache_ && input_->shouldPrefetchStripes()) {
     auto numStripes = getFooter().stripesSize();
     for (auto i = 0; i < numStripes; i++) {
@@ -217,6 +218,7 @@ ReaderBase::ReaderBase(
       input_->load(LogType::FOOTER);
     }
   }
+
   // initialize file decrypter
   handler_ = DecryptionHandler::create(*footer_, decryptorFactory_.get());
 }

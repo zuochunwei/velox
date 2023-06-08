@@ -74,7 +74,10 @@ SelectiveFloatingPointColumnReader<TData, TRequested>::
           EncodingKey{root::nodeType_->id, params.flatMapContext().sequence}
               .forKind(proto::Stream_Kind_DATA),
           params.streamLabels().label(),
-          true)) {}
+          true)) {
+  VELOX_CHECK(
+      (int)proto::Stream_Kind_DATA == (int)proto::orc::Stream_Kind_DATA);
+}
 
 template <typename TData, typename TRequested>
 uint64_t SelectiveFloatingPointColumnReader<TData, TRequested>::skip(

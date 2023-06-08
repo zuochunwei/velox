@@ -22,20 +22,17 @@ namespace facebook::velox::dwrf {
 
 class SelectiveByteRleColumnReader
     : public dwio::common::SelectiveByteRleColumnReader {
- public:
-  using ValueType = int8_t;
+  void init(DwrfParams& params, bool isBool) {
+    auto format = params.stripeStreams().format();
+    if (format == DwrfFormat::kDwrf) {
+      initDwrf(params, isBool);
+    } else {
+      VELOX_CHECK(format == DwrfFormat::kOrc);
+      initOrc(params, isBool);
+    }
+  }
 
-  SelectiveByteRleColumnReader(
-      std::shared_ptr<const dwio::common::TypeWithId> requestedType,
-      const std::shared_ptr<const dwio::common::TypeWithId>& dataType,
-      DwrfParams& params,
-      common::ScanSpec& scanSpec,
-      bool isBool)
-      : dwio::common::SelectiveByteRleColumnReader(
-            std::move(requestedType),
-            params,
-            scanSpec,
-            dataType->type) {
+  void initDwrf(DwrfParams& params, bool isBool) {
     EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
     auto& stripe = params.stripeStreams();
     if (isBool) {
@@ -53,6 +50,43 @@ class SelectiveByteRleColumnReader
               true),
           encodingKey);
     }
+  }
+
+  void initOrc(DwrfParams& params, bool isBool) {
+    EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
+    auto& stripe = params.stripeStreams();
+    if (isBool) {
+      boolRle_ = createBooleanRleDecoder(
+          stripe.getStream(
+              encodingKey.forKind(proto::orc::Stream_Kind_DATA),
+              params.streamLabels().label(),
+              true),
+          encodingKey);
+    } else {
+      byteRle_ = createByteRleDecoder(
+          stripe.getStream(
+              encodingKey.forKind(proto::orc::Stream_Kind_DATA),
+              params.streamLabels().label(),
+              true),
+          encodingKey);
+    }
+  }
+
+ public:
+  using ValueType = int8_t;
+
+  SelectiveByteRleColumnReader(
+      std::shared_ptr<const dwio::common::TypeWithId> requestedType,
+      const std::shared_ptr<const dwio::common::TypeWithId>& dataType,
+      DwrfParams& params,
+      common::ScanSpec& scanSpec,
+      bool isBool)
+      : dwio::common::SelectiveByteRleColumnReader(
+            std::move(requestedType),
+            params,
+            scanSpec,
+            dataType->type) {
+    init(params, isBool);
   }
 
   void seekToRowGroup(uint32_t index) override {
