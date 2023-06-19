@@ -24,50 +24,24 @@ class SelectiveByteRleColumnReader
     : public dwio::common::SelectiveByteRleColumnReader {
   void init(DwrfParams& params, bool isBool) {
     auto format = params.stripeStreams().format();
+    EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
+    auto& stripe = params.stripeStreams();
+
+    DwrfStreamIdentifier dataId;
     if (format == DwrfFormat::kDwrf) {
-      initDwrf(params, isBool);
+      dataId = encodingKey.forKind(proto::Stream_Kind_DATA);
     } else {
       VELOX_CHECK(format == DwrfFormat::kOrc);
-      initOrc(params, isBool);
+      dataId = encodingKey.forKind(proto::orc::Stream_Kind_DATA);
     }
-  }
 
-  void initDwrf(DwrfParams& params, bool isBool) {
-    EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
-    auto& stripe = params.stripeStreams();
     if (isBool) {
       boolRle_ = createBooleanRleDecoder(
-          stripe.getStream(
-              encodingKey.forKind(proto::Stream_Kind_DATA),
-              params.streamLabels().label(),
-              true),
+          stripe.getStream(dataId, params.streamLabels().label(), true),
           encodingKey);
     } else {
       byteRle_ = createByteRleDecoder(
-          stripe.getStream(
-              encodingKey.forKind(proto::Stream_Kind_DATA),
-              params.streamLabels().label(),
-              true),
-          encodingKey);
-    }
-  }
-
-  void initOrc(DwrfParams& params, bool isBool) {
-    EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
-    auto& stripe = params.stripeStreams();
-    if (isBool) {
-      boolRle_ = createBooleanRleDecoder(
-          stripe.getStream(
-              encodingKey.forKind(proto::orc::Stream_Kind_DATA),
-              params.streamLabels().label(),
-              true),
-          encodingKey);
-    } else {
-      byteRle_ = createByteRleDecoder(
-          stripe.getStream(
-              encodingKey.forKind(proto::orc::Stream_Kind_DATA),
-              params.streamLabels().label(),
-              true),
+          stripe.getStream(dataId, params.streamLabels().label(), true),
           encodingKey);
     }
   }
