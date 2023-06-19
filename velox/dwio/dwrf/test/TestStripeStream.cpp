@@ -117,7 +117,7 @@ TEST(StripeStream, planReads) {
           BufferedInput::kMaxMergeDistance,
           true),
       std::make_unique<PostScript>(proto::PostScript{}),
-      footer,
+      std::make_unique<FooterWrapper>(footer),
       nullptr);
   ColumnSelector cs{readerBase->getSchema(), std::vector<uint64_t>{2}, true};
   auto stripeFooter =
@@ -162,7 +162,7 @@ TEST(StripeStream, filterSequences) {
       *pool,
       std::make_unique<BufferedInput>(std::move(is), *pool),
       std::make_unique<PostScript>(proto::PostScript{}),
-      footer,
+      std::make_unique<FooterWrapper>(footer),
       nullptr);
 
   // mock a filter that we only need one node and one sequence
@@ -221,7 +221,7 @@ TEST(StripeStream, zeroLength) {
       *pool,
       std::make_unique<BufferedInput>(std::move(is), *pool),
       std::make_unique<PostScript>(std::move(ps)),
-      footer,
+      std::make_unique<FooterWrapper>(footer),
       nullptr);
 
   auto stripeFooter =
@@ -296,7 +296,7 @@ TEST(StripeStream, planReadsIndex) {
       *pool,
       std::make_unique<BufferedInput>(std::move(is), *pool),
       std::make_unique<PostScript>(std::move(ps)),
-      footer,
+      std::make_unique<FooterWrapper>(footer),
       std::move(cache));
 
   auto stripeFooter =
@@ -420,7 +420,7 @@ TEST(StripeStream, readEncryptedStreams) {
           std::make_shared<facebook::velox::InMemoryReadFile>(std::string()),
           *readerPool),
       std::make_unique<PostScript>(std::move(ps)),
-      footer,
+      std::make_unique<FooterWrapper>(footer),
       nullptr,
       std::move(handler));
   auto stripeReader =
@@ -488,7 +488,7 @@ TEST(StripeStream, schemaMismatch) {
           std::make_shared<facebook::velox::InMemoryReadFile>(std::string()),
           *pool),
       std::make_unique<PostScript>(std::move(ps)),
-      footer,
+      std::make_unique<FooterWrapper>(footer),
       nullptr,
       std::move(handler));
   auto stripeReader =
