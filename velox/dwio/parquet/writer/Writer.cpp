@@ -176,11 +176,15 @@ void Writer::newRowGroup(int32_t numRows) {
 }
 
 void Writer::close() {
+  flush();
   if (arrowContext_->writer) {
     PARQUET_THROW_NOT_OK(arrowContext_->writer->Close());
     arrowContext_->writer.reset();
   }
+
   PARQUET_THROW_NOT_OK(stream_->Close());
+
+  stagingChunks_.clear();
 }
 
 parquet::WriterOptions getParquetOptions(
