@@ -151,10 +151,6 @@ class MockMemoryPool : public velox::memory::MemoryPool {
     VELOX_NYI("{} unsupported", __FUNCTION__);
   }
 
-  bool highUsage() override {
-    VELOX_NYI("{} unsupported", __FUNCTION__);
-  }
-
   int64_t currentBytes() const override {
     return localMemoryUsage_;
   }
