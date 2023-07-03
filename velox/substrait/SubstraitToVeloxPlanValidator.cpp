@@ -18,9 +18,9 @@
 #include <google/protobuf/wrappers.pb.h>
 #include <string>
 #include "TypeUtils.h"
+#include "velox/exec/Aggregate.h"
 #include "velox/expression/SignatureBinder.h"
 #include "velox/type/Tokenizer.h"
-
 namespace facebook::velox::substrait {
 namespace {
 bool validateColNames(const ::substrait::NamedStruct& schema) {

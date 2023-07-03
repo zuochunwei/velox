@@ -277,13 +277,16 @@ bool registerBloomFilterAggAggregate(const std::string& name) {
           .build()};
 
   return exec::registerAggregateFunction(
-      name,
-      std::move(signatures),
-      [name](
-          core::AggregationNode::Step step,
-          const std::vector<TypePtr>& argTypes,
-          const TypePtr& resultType) -> std::unique_ptr<exec::Aggregate> {
-        return std::make_unique<BloomFilterAggAggregate<uint64_t>>(resultType);
-      });
+             name,
+             std::move(signatures),
+             [name](
+                 core::AggregationNode::Step step,
+                 const std::vector<TypePtr>& argTypes,
+                 const TypePtr& resultType)
+                 -> std::unique_ptr<exec::Aggregate> {
+               return std::make_unique<BloomFilterAggAggregate<uint64_t>>(
+                   resultType);
+             })
+      .mainFunction;
 }
 } // namespace facebook::velox::functions::sparksql::aggregates
