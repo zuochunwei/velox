@@ -469,99 +469,105 @@ bool registerDecimalAvgAggregate(const std::string& name) {
           .build());
 
   return exec::registerAggregateFunction(
-      name,
-      std::move(signatures),
-      [name](
-          core::AggregationNode::Step step,
-          const std::vector<TypePtr>& argTypes,
-          const TypePtr& resultType) -> std::unique_ptr<exec::Aggregate> {
-        VELOX_CHECK_LE(
-            argTypes.size(), 1, "{} takes at most one argument", name);
-        auto& inputType = argTypes[0];
-        if (inputType->isShortDecimal()) {
-          if (resultType->isShortDecimal()) {
-            return std::make_unique<
-                DecimalAverageAggregate<int64_t, int128_t, int64_t>>(
-                inputType, resultType);
-          }
-          if (resultType->isLongDecimal()) {
-            return std::make_unique<
-                DecimalAverageAggregate<int64_t, int128_t, int128_t>>(
-                inputType, resultType);
-          }
-          switch (resultType->kind()) {
-            case TypeKind::ROW: { // Partial
-              auto sumResultType = resultType->asRow().childAt(0);
-              if (sumResultType->isShortDecimal()) {
-                return std::make_unique<
-                    DecimalAverageAggregate<int64_t, int128_t, int64_t>>(
-                    inputType, resultType);
-              } else {
-                return std::make_unique<
-                    DecimalAverageAggregate<int64_t, int128_t, int128_t>>(
-                    inputType, resultType);
-              }
-            }
-            default:
-              VELOX_FAIL(
-                  "Unknown result type for {} aggregation {}",
-                  name,
-                  resultType->kindName());
-          }
-        }
-        if (inputType->isLongDecimal()) {
-          if (resultType->isLongDecimal()) {
-            return std::make_unique<
-                DecimalAverageAggregate<int128_t, int128_t, int128_t>>(
-                inputType, resultType);
-          }
-          switch (resultType->kind()) {
-            case TypeKind::ROW: { // Partial
-              auto sumResultType = resultType->asRow().childAt(0);
-              if (sumResultType->kind() == TypeKind::HUGEINT) {
-                return std::make_unique<
-                    DecimalAverageAggregate<int128_t, int128_t, int128_t>>(
-                    inputType, resultType);
-              } else {
-                VELOX_FAIL(
-                    "Partial Avg Agg result type must greater than input type. result={}",
-                    resultType->kind());
-              }
-            }
-            default:
-              VELOX_FAIL(
-                  "Unknown result type for {} aggregation {}",
-                  name,
-                  resultType->kindName());
-          }
-        }
-        switch (inputType->kind()) {
-          case TypeKind::ROW: { // Final
-            VELOX_CHECK(!exec::isRawInput(step));
-            auto sumInputType = inputType->asRow().childAt(0);
-            if (sumInputType->isLongDecimal()) {
-              if (resultType->isShortDecimal()) {
-                return std::make_unique<
-                    DecimalAverageAggregate<int128_t, int128_t, int64_t>>(
-                    sumInputType, resultType);
-              } else {
-                return std::make_unique<
-                    DecimalAverageAggregate<int128_t, int128_t, int128_t>>(
-                    sumInputType, resultType);
-              }
-            }
-            VELOX_FAIL(
-                "Unknown sum type for {} aggregation {}",
-                name,
-                sumInputType->kindName());
-          }
-          default:
-            VELOX_FAIL(
-                "Unknown input type for {} aggregation {}",
-                name,
-                inputType->kindName());
-        }
-      },
-      true);
+             name,
+             std::move(signatures),
+             [name](
+                 core::AggregationNode::Step step,
+                 const std::vector<TypePtr>& argTypes,
+                 const TypePtr& resultType)
+                 -> std::unique_ptr<exec::Aggregate> {
+               VELOX_CHECK_LE(
+                   argTypes.size(), 1, "{} takes at most one argument", name);
+               auto& inputType = argTypes[0];
+               if (inputType->isShortDecimal()) {
+                 if (resultType->isShortDecimal()) {
+                   return std::make_unique<
+                       DecimalAverageAggregate<int64_t, int128_t, int64_t>>(
+                       inputType, resultType);
+                 }
+                 if (resultType->isLongDecimal()) {
+                   return std::make_unique<
+                       DecimalAverageAggregate<int64_t, int128_t, int128_t>>(
+                       inputType, resultType);
+                 }
+                 switch (resultType->kind()) {
+                   case TypeKind::ROW: { // Partial
+                     auto sumResultType = resultType->asRow().childAt(0);
+                     if (sumResultType->isShortDecimal()) {
+                       return std::make_unique<
+                           DecimalAverageAggregate<int64_t, int128_t, int64_t>>(
+                           inputType, resultType);
+                     } else {
+                       return std::make_unique<DecimalAverageAggregate<
+                           int64_t,
+                           int128_t,
+                           int128_t>>(inputType, resultType);
+                     }
+                   }
+                   default:
+                     VELOX_FAIL(
+                         "Unknown result type for {} aggregation {}",
+                         name,
+                         resultType->kindName());
+                 }
+               }
+               if (inputType->isLongDecimal()) {
+                 if (resultType->isLongDecimal()) {
+                   return std::make_unique<
+                       DecimalAverageAggregate<int128_t, int128_t, int128_t>>(
+                       inputType, resultType);
+                 }
+                 switch (resultType->kind()) {
+                   case TypeKind::ROW: { // Partial
+                     auto sumResultType = resultType->asRow().childAt(0);
+                     if (sumResultType->kind() == TypeKind::HUGEINT) {
+                       return std::make_unique<DecimalAverageAggregate<
+                           int128_t,
+                           int128_t,
+                           int128_t>>(inputType, resultType);
+                     } else {
+                       VELOX_FAIL(
+                           "Partial Avg Agg result type must greater than input type. result={}",
+                           resultType->kind());
+                     }
+                   }
+                   default:
+                     VELOX_FAIL(
+                         "Unknown result type for {} aggregation {}",
+                         name,
+                         resultType->kindName());
+                 }
+               }
+               switch (inputType->kind()) {
+                 case TypeKind::ROW: { // Final
+                   VELOX_CHECK(!exec::isRawInput(step));
+                   auto sumInputType = inputType->asRow().childAt(0);
+                   if (sumInputType->isLongDecimal()) {
+                     if (resultType->isShortDecimal()) {
+                       return std::make_unique<DecimalAverageAggregate<
+                           int128_t,
+                           int128_t,
+                           int64_t>>(sumInputType, resultType);
+                     } else {
+                       return std::make_unique<DecimalAverageAggregate<
+                           int128_t,
+                           int128_t,
+                           int128_t>>(sumInputType, resultType);
+                     }
+                   }
+                   VELOX_FAIL(
+                       "Unknown sum type for {} aggregation {}",
+                       name,
+                       sumInputType->kindName());
+                 }
+                 default:
+                   VELOX_FAIL(
+                       "Unknown input type for {} aggregation {}",
+                       name,
+                       inputType->kindName());
+               }
+             },
+             true)
+      .mainFunction;
 }
 } // namespace facebook::velox::functions::sparksql::aggregates

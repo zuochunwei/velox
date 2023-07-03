@@ -403,48 +403,51 @@ bool registerDecimalSumAggregate(const std::string& name) {
   };
 
   return exec::registerAggregateFunction(
-      name,
-      std::move(signatures),
-      [name](
-          core::AggregationNode::Step step,
-          const std::vector<TypePtr>& argTypes,
-          const TypePtr& resultType) -> std::unique_ptr<exec::Aggregate> {
-        VELOX_CHECK_EQ(argTypes.size(), 1, "{} takes only one argument", name);
-        auto& inputType = argTypes[0];
-        if (inputType->isShortDecimal()) {
-          return std::make_unique<DecimalSumAggregate<int64_t, int128_t>>(
-              resultType);
-        }
-        if (inputType->isLongDecimal()) {
-          return std::make_unique<DecimalSumAggregate<int128_t, int128_t>>(
-              resultType);
-        }
-        switch (inputType->kind()) {
-          case TypeKind::ROW: {
-            DCHECK(!exec::isRawInput(step));
-            auto sumInputType = inputType->asRow().childAt(0);
-            if (sumInputType->isShortDecimal()) {
-              return std::make_unique<DecimalSumAggregate<int64_t, int128_t>>(
-                  resultType);
-            }
-            if (sumInputType->isLongDecimal()) {
-              return std::make_unique<DecimalSumAggregate<int128_t, int128_t>>(
-                  resultType);
-            }
-            VELOX_FAIL(
-                "Unknown sum type for {} aggregation {}",
-                name,
-                sumInputType->kindName());
-          }
-          default:
-            VELOX_CHECK(
-                false,
-                "Unknown input type for {} aggregation {}",
-                name,
-                inputType->kindName());
-        }
-      },
-      true);
+             name,
+             std::move(signatures),
+             [name](
+                 core::AggregationNode::Step step,
+                 const std::vector<TypePtr>& argTypes,
+                 const TypePtr& resultType)
+                 -> std::unique_ptr<exec::Aggregate> {
+               VELOX_CHECK_EQ(
+                   argTypes.size(), 1, "{} takes only one argument", name);
+               auto& inputType = argTypes[0];
+               if (inputType->isShortDecimal()) {
+                 return std::make_unique<
+                     DecimalSumAggregate<int64_t, int128_t>>(resultType);
+               }
+               if (inputType->isLongDecimal()) {
+                 return std::make_unique<
+                     DecimalSumAggregate<int128_t, int128_t>>(resultType);
+               }
+               switch (inputType->kind()) {
+                 case TypeKind::ROW: {
+                   DCHECK(!exec::isRawInput(step));
+                   auto sumInputType = inputType->asRow().childAt(0);
+                   if (sumInputType->isShortDecimal()) {
+                     return std::make_unique<
+                         DecimalSumAggregate<int64_t, int128_t>>(resultType);
+                   }
+                   if (sumInputType->isLongDecimal()) {
+                     return std::make_unique<
+                         DecimalSumAggregate<int128_t, int128_t>>(resultType);
+                   }
+                   VELOX_FAIL(
+                       "Unknown sum type for {} aggregation {}",
+                       name,
+                       sumInputType->kindName());
+                 }
+                 default:
+                   VELOX_CHECK(
+                       false,
+                       "Unknown input type for {} aggregation {}",
+                       name,
+                       inputType->kindName());
+               }
+             },
+             true)
+      .mainFunction;
 }
 
 } // namespace facebook::velox::functions::sparksql::aggregates
