@@ -86,8 +86,7 @@ class PrestoSerializerTest : public ::testing::Test {
       rows[i] = IndexRange{i, 1};
     }
 
-    sanityCheckEstimateSerializedSize(
-        rowVector[0], folly::Range(rows.data(), numRows));
+    sanityCheckEstimateSerializedSize(rowVector[0]);
 
     auto arena = std::make_unique<StreamArena>(pool_.get());
     auto rowType = asRowType(rowVector[0]->type());

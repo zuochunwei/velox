@@ -24,11 +24,7 @@ void SelectiveStringDirectColumnReader::init(DwrfParams& params) {
   auto format = params.stripeStreams().format();
   EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
   auto& stripe = params.stripeStreams();
-}
 
-void SelectiveStringDirectColumnReader::initOrc(DwrfParams& params) {
-  EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
-  auto& stripe = params.stripeStreams();
   DwrfStreamIdentifier lenId;
   DwrfStreamIdentifier dataId;
   RleVersion rleVersion;
@@ -45,12 +41,12 @@ void SelectiveStringDirectColumnReader::initOrc(DwrfParams& params) {
 
   bool lenVInts = stripe.getUseVInts(lenId);
   lengthDecoder_ = createRleDecoder</*isSigned*/ false>(
-      stripe.getStream(lenId, true),
+      stripe.getStream(lenId, params.streamLabels().label(), true),
       rleVersion,
       memoryPool_,
       lenVInts,
       dwio::common::INT_BYTE_SIZE);
-  blobStream_ = stripe.getStream(dataId, true);
+  blobStream_ = stripe.getStream(dataId, params.streamLabels().label(), true);
 }
 
 SelectiveStringDirectColumnReader::SelectiveStringDirectColumnReader(

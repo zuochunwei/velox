@@ -202,6 +202,10 @@ class ParquetReader : public dwio::common::Reader {
     return readerBase_->fileNumRows();
   }
 
+  const size_t numberOfRowGroups() {
+    return readerBase_->fileMetaData().row_groups.size();
+  }
+
   std::unique_ptr<dwio::common::ColumnStatistics> columnStatistics(
       uint32_t index) const override {
     return nullptr;
@@ -214,10 +218,6 @@ class ParquetReader : public dwio::common::Reader {
   const std::shared_ptr<const dwio::common::TypeWithId>& typeWithId()
       const override {
     return readerBase_->schemaWithId();
-  }
-
-  size_t numberOfRowGroups() const {
-    return readerBase_->fileMetaData().row_groups.size();
   }
 
   std::unique_ptr<dwio::common::RowReader> createRowReader(

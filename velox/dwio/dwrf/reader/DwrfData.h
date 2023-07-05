@@ -96,8 +96,6 @@ class DwrfData : public dwio::common::FormatData {
         entry.positions().begin(), entry.positions().end());
   }
 
-  void init(StripeStreams& stripe);
-
   memory::MemoryPool& memoryPool_;
   const std::shared_ptr<const dwio::common::TypeWithId> nodeType_;
   FlatMapContext flatMapContext_;

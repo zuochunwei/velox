@@ -208,6 +208,8 @@ struct LastDayFunction {
     result = Date(daysSinceEpoch);
   }
 };
+
+template <typename T>
 struct DateAddFunction {
   VELOX_DEFINE_FUNCTION_TYPES(T);
 

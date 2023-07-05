@@ -374,7 +374,6 @@ core::PlanNodePtr SubstraitVeloxPlanConverter::toVeloxPlan(
             exprConverter_->toVeloxExpr(substraitAggMask, inputType));
       }
     }
-    aggregateMasks.push_back(mask);
     const auto& aggFunction = measure.measure();
     auto funcName = subParser_->findVeloxFunction(
         functionMap_, aggFunction.function_reference());

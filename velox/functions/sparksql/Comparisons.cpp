@@ -41,33 +41,41 @@ class ComparisonFunction final : public exec::VectorFunction {
       const TypePtr& outputType,
       exec::EvalCtx& context,
       VectorPtr& result) const override {
-    exec::DecodedArgs decodedArgs(rows, args, context);
-    DecodedVector* decoded0 = decodedArgs.at(0);
-    DecodedVector* decoded1 = decodedArgs.at(1);
     context.ensureWritable(rows, BOOLEAN(), result);
     auto* flatResult = result->asFlatVector<bool>();
     flatResult->mutableRawValues<uint64_t>();
     const Cmp cmp;
-    if (decoded0->isIdentityMapping() && decoded1->isIdentityMapping()) {
-      auto decoded0Values = *args[0]->as<FlatVector<T>>();
-      auto decoded1Values = *args[1]->as<FlatVector<T>>();
+    if (args[0]->isFlatEncoding() && args[1]->isFlatEncoding()) {
+            // Fast path for (flat, flat).
+      auto flatA = args[0]->asUnchecked<FlatVector<T>>();
+      auto rawA = flatA->mutableRawValues();
+      auto flatB = args[1]->asUnchecked<FlatVector<T>>();
+      auto rawB = flatB->mutableRawValues();
       rows.applyToSelected([&](vector_size_t i) {
         flatResult->set(
-            i, cmp(decoded0Values.valueAt(i), decoded1Values.valueAt(i)));
+            i, cmp(rawA[i], rawB[i]));
       });
-    } else if (decoded0->isIdentityMapping() && decoded1->isConstantMapping()) {
-      auto decoded0Values = *args[0]->as<FlatVector<T>>();
-      auto constantValue = decoded1->valueAt<T>(0);
+    } else if (args[0]->isConstantEncoding() && args[1]->isFlatEncoding()) {
+      // Fast path for (const, flat).
+      auto constant = args[0]->asUnchecked<SimpleVector<T>>()->valueAt(0);
+      auto flatValues = args[1]->asUnchecked<FlatVector<T>>();
+      auto rawValues = flatValues->mutableRawValues();
       rows.applyToSelected([&](vector_size_t i) {
-        flatResult->set(i, cmp(decoded0Values.valueAt(i), constantValue));
+        flatResult->set(i, cmp(constant, rawValues[i]));
       });
-    } else if (decoded0->isConstantMapping() && decoded1->isIdentityMapping()) {
-      auto constantValue = decoded0->valueAt<T>(0);
-      auto decoded1Values = *args[1]->as<FlatVector<T>>();
+    } else if (args[0]->isFlatEncoding() && args[1]->isConstantEncoding()) {
+      // Fast path for (flat, const).
+      auto flatValues = args[0]->asUnchecked<FlatVector<T>>();
+      auto constant = args[1]->asUnchecked<SimpleVector<T>>()->valueAt(0);
+      auto rawValues = flatValues->mutableRawValues();
       rows.applyToSelected([&](vector_size_t i) {
-        flatResult->set(i, cmp(constantValue, decoded1Values.valueAt(i)));
+        flatResult->set(i, cmp(rawValues[i], constant));
       });
     } else {
+      // Fast path if one or more arguments are encoded.
+      exec::DecodedArgs decodedArgs(rows, args, context);
+      auto decoded0 = decodedArgs.at(0);
+      auto decoded1 = decodedArgs.at(1);
       rows.applyToSelected([&](vector_size_t i) {
         flatResult->set(
             i, cmp(decoded0->valueAt<T>(i), decoded1->valueAt<T>(i)));

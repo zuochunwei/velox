@@ -26,12 +26,7 @@ void SelectiveTimestampColumnReader::init(DwrfParams& params) {
   auto format = params.stripeStreams().format();
   EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
   auto& stripe = params.stripeStreams();
-}
 
-void SelectiveTimestampColumnReader::initOrc(DwrfParams& params) {
-  EncodingKey encodingKey{nodeType_->id, params.flatMapContext().sequence};
-  auto& stripe = params.stripeStreams();
-  version = convertRleVersion(stripe.getEncodingOrc(encodingKey).kind());
   DwrfStreamIdentifier dataId;
   DwrfStreamIdentifier nanoDataId;
   if (format == DwrfFormat::kDwrf) {

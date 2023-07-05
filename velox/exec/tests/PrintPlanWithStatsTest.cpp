@@ -198,7 +198,7 @@ TEST_F(PrintPlanWithStatsTest, innerJoinWithTableScan) {
        {"          prefetchBytes       [ ]* sum: .+, count: 1, min: .+, max: .+"},
        {"          preloadedSplits[ ]+sum: .+, count: .+, min: .+, max: .+",
         true},
-       {"          processedSplits     [ ]* sum: 1, count: 1, min: 1, max: 1"},
+       {"          processedSplits     [ ]* sum: 0, count: 1, min: 0, max: 0"},
        {"          processedStrides    [ ]* sum: 0, count: 1, min: 0, max: 0"},
        {"          queryThreadIoLatency[ ]* sum: .+, count: .+ min: .+, max: .+"},
        {"          ramReadBytes        [ ]* sum: .+, count: 1, min: .+, max: .+"},
@@ -287,7 +287,7 @@ TEST_F(PrintPlanWithStatsTest, partialAggregateWithTableScan) {
          {"        overreadBytes[ ]* sum: 0B, count: 1, min: 0B, max: 0B"},
 
          {"        prefetchBytes    [ ]* sum: .+, count: 1, min: .+, max: .+"},
-         {"        processedSplits  [ ]* sum: 1, count: 1, min: 1, max: 1"},
+         {"        processedSplits  [ ]* sum: 0, count: 1, min: 0, max: 0"},
          {"        processedStrides [ ]* sum: 0, count: 1, min: 0, max: 0"},
          {"        preloadedSplits[ ]+sum: .+, count: .+, min: .+, max: .+",
           true},

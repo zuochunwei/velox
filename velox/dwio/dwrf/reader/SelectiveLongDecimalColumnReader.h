@@ -59,10 +59,11 @@ class SelectiveLongDecimalColumnReader
     version_ = convertRleVersion(encodingKind);
 
     valueDecoder_ = createDirectDecoder<true>(
-        stripe.getStream(values, true), valuesVInts, sizeof(int128_t));
+        stripe.getStream(values, params.streamLabels().label(), true),
+        valuesVInts, sizeof(int128_t));
 
     scaleDecoder_ = createRleDecoder<true>(
-        stripe.getStream(scales, true),
+        stripe.getStream(scales, params.streamLabels().label(), true),
         version_,
         params.pool(),
         scalesVInts,

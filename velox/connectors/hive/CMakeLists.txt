@@ -13,7 +13,7 @@
 # limitations under the License.
 
 add_library(
-  velox_hive_connector
+  velox_hive_connector OBJECT
   FileHandle.cpp
   HiveConfig.cpp
   HiveConnector.cpp

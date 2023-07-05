@@ -33,7 +33,8 @@ struct ArrowContext;
 struct WriterOptions {
   bool enableDictionary = true;
   int64_t dataPageSize = 1'024 * 1'024;
-  int32_t rowsInRowGroup = 10'000;
+  int64_t rowsInRowGroup = 10'000;
+  int64_t bytesInRowGroup = 128 * 1'024 * 1'024;
   int64_t maxRowGroupLength = 1'024 * 1'024;
   int64_t dictionaryPageSizeLimit = 1'024 * 1'024;
   double bufferGrowRatio = 1;
@@ -76,7 +77,12 @@ class Writer : public dwio::common::Writer {
   void close() override;
 
  private:
-  const int32_t rowsInRowGroup_;
+  const int64_t rowsInRowGroup_;
+  const int64_t bytesInRowGroup_;
+  const double bufferGrowRatio_;
+
+  int64_t stagingRows_ = 0;
+  int64_t stagingBytes_ = 0;
 
   // Pool for 'stream_'.
   std::shared_ptr<memory::MemoryPool> pool_;

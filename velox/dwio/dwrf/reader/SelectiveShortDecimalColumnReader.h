@@ -59,12 +59,12 @@ class SelectiveShortDecimalColumnReader
     version_ = convertRleVersion(encodingKind);
 
     valueDecoder_ = createDirectDecoder<true>(
-        stripe.getStream(values, true),
+        stripe.getStream(values, params.streamLabels().label(), true),
         valuesVInts,
         facebook::velox::dwio::common::LONG_BYTE_SIZE);
 
     scaleDecoder_ = createRleDecoder<true>(
-        stripe.getStream(scales, true),
+        stripe.getStream(scales, params.streamLabels().label(), true),
         version_,
         params.pool(),
         scalesVInts,

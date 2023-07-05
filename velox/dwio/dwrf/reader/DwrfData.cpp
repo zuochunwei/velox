@@ -15,12 +15,19 @@
  */
 
 #include "velox/dwio/dwrf/reader/DwrfData.h"
-
 #include "velox/dwio/common/BufferUtil.h"
 
 namespace facebook::velox::dwrf {
 
-void DwrfData::init(StripeStreams& stripe) {
+DwrfData::DwrfData(
+    std::shared_ptr<const dwio::common::TypeWithId> nodeType,
+    StripeStreams& stripe,
+    const StreamLabels& streamLabels,
+    FlatMapContext flatMapContext)
+    : memoryPool_(stripe.getMemoryPool()),
+      nodeType_(std::move(nodeType)),
+      flatMapContext_(std::move(flatMapContext)),
+      rowsPerRowGroup_{stripe.rowsPerRowGroup()} {
   auto format = stripe.format();
   EncodingKey encodingKey{nodeType_->id, flatMapContext_.sequence};
 
@@ -34,36 +41,16 @@ void DwrfData::init(StripeStreams& stripe) {
     presentStream = encodingKey.forKind(proto::orc::Stream_Kind_PRESENT);
     rowIndexStream = encodingKey.forKind(proto::orc::Stream_Kind_ROW_INDEX);
   }
-}
 
-void DwrfData::initOrc(StripeStreams& stripe) {
-  EncodingKey encodingKey{nodeType_->id, flatMapContext_.sequence};
-
-  std::unique_ptr<dwio::common::SeekableInputStream> stream = stripe.getStream(
-      encodingKey.forKind(proto::orc::Stream_Kind_PRESENT), false);
   std::unique_ptr<dwio::common::SeekableInputStream> stream =
       stripe.getStream(presentStream, streamLabels.label(), false);
   if (stream) {
     notNullDecoder_ = createBooleanRleDecoder(std::move(stream), encodingKey);
   }
-
-  // We always initialize indexStream_ because indices are needed as
-  // soon as there is a single filter that can trigger row group skips
-  // anywhere in the reader tree. This is not known at construct time
-  // because the first filter can come from a hash join or other run
-  // time pushdown.
-  indexStream_ = stripe.getStream(rowIndexStream, false);
-}
-
-DwrfData::DwrfData(
-    std::shared_ptr<const dwio::common::TypeWithId> nodeType,
-    StripeStreams& stripe,
-    FlatMapContext flatMapContext)
-    : memoryPool_(stripe.getMemoryPool()),
-      nodeType_(std::move(nodeType)),
-      flatMapContext_(std::move(flatMapContext)),
-      rowsPerRowGroup_{stripe.rowsPerRowGroup()} {
-  init(stripe);
+  indexStream_ = stripe.getStream(
+        rowIndexStream,
+        streamLabels.label(),
+        false);
 }
 
 uint64_t DwrfData::skipNulls(uint64_t numValues, bool /*nullsOnly*/) {
