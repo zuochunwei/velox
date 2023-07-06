@@ -1042,10 +1042,10 @@ bool SubstraitToVeloxPlanValidator::validate(
     }
   }
 
-  std::unordered_set<std::string> supportedFuncs = {
+  // The supported aggregation functions.
+  std::unordered_set<std::string> supportedAggFuncs = {
       "sum",
       "sum_merge",
-      "bin",
       "collect_set",
       "count",
       "count_merge",
@@ -1087,7 +1087,7 @@ bool SubstraitToVeloxPlanValidator::validate(
       "approx_distinct"};
   for (const auto& funcSpec : funcSpecs) {
     auto funcName = subParser_->getSubFunctionName(funcSpec);
-    if (supportedFuncs.find(funcName) == supportedFuncs.end()) {
+    if (supportedAggFuncs.find(funcName) == supportedAggFuncs.end()) {
       logValidateMsg(
           "native validation failed due to:  " + funcName +
           " was not supported in AggregateRel.");
