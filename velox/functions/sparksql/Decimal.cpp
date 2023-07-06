@@ -215,62 +215,6 @@ class RoundDecimalFunction final : public exec::VectorFunction {
   }
 };
 
-template <typename TInput>
-class AbsFunction final : public exec::VectorFunction {
-  void apply(
-      const SelectivityVector& rows,
-      std::vector<VectorPtr>& args, // Not using const ref so we can reuse args
-      const TypePtr& outputType,
-      exec::EvalCtx& context,
-      VectorPtr& resultRef) const final {
-    VELOX_CHECK_EQ(args.size(), 1);
-    auto inputType = args[0]->type();
-    VELOX_CHECK(
-        inputType->isShortDecimal() || inputType->isLongDecimal(),
-        "ShortDecimal or LongDecimal type is required.");
-
-    exec::DecodedArgs decodedArgs(rows, args, context);
-    auto decimalVector = decodedArgs.at(0);
-    if (inputType->isShortDecimal()) {
-      auto decimalType = inputType->asShortDecimal();
-      context.ensureWritable(
-          rows,
-          DECIMAL(decimalType.precision(), decimalType.scale()),
-          resultRef);
-      auto result =
-          resultRef->asUnchecked<FlatVector<int64_t>>()->mutableRawValues();
-      rows.applyToSelected([&](int row) {
-        auto unscaled = std::abs(decimalVector->valueAt<int64_t>(row));
-        if (unscaled >= DecimalUtil::kShortDecimalMin &&
-            unscaled <= DecimalUtil::kShortDecimalMax) {
-          result[row] = unscaled;
-        } else {
-          // TODO: adjust the bahavior according to ANSI.
-          resultRef->setNull(row, true);
-        }
-      });
-    } else {
-      auto decimalType = inputType->asLongDecimal();
-      context.ensureWritable(
-          rows,
-          DECIMAL(decimalType.precision(), decimalType.scale()),
-          resultRef);
-      auto result =
-          resultRef->asUnchecked<FlatVector<int128_t>>()->mutableRawValues();
-      rows.applyToSelected([&](int row) {
-        auto unscaled = std::abs(decimalVector->valueAt<int128_t>(row));
-        if (unscaled >= DecimalUtil::kLongDecimalMin &&
-            unscaled <= DecimalUtil::kLongDecimalMax) {
-          result[row] = unscaled;
-        } else {
-          // TODO: adjust the bahavior according to ANSI.
-          resultRef->setNull(row, true);
-        }
-      });
-    }
-  }
-};
-
 class UnscaledValueFunction final : public exec::VectorFunction {
   void apply(
       const SelectivityVector& rows,
@@ -328,17 +272,6 @@ std::vector<std::shared_ptr<exec::FunctionSignature>> roundDecimalSignatures() {
               .build()};
 }
 
-std::vector<std::shared_ptr<exec::FunctionSignature>> absSignatures() {
-  return {exec::FunctionSignatureBuilder()
-              .integerVariable("a_precision")
-              .integerVariable("a_scale")
-              .integerVariable("r_precision", "min(38, a_precision)")
-              .integerVariable("r_scale", "min(38, a_scale)")
-              .returnType("DECIMAL(r_precision, r_scale)")
-              .argumentType("DECIMAL(a_precision, a_scale)")
-              .build()};
-}
-
 std::vector<std::shared_ptr<exec::FunctionSignature>>
 unscaledValueSignatures() {
   return {exec::FunctionSignatureBuilder()
@@ -383,23 +316,6 @@ std::shared_ptr<exec::VectorFunction> makeRoundDecimal(
     default:
       VELOX_FAIL(
           "Not support this type {} in round_decimal", fromType->kindName())
-  }
-}
-
-std::shared_ptr<exec::VectorFunction> makeAbs(
-    const std::string& name,
-    const std::vector<exec::VectorFunctionArg>& inputArgs) {
-  VELOX_CHECK_EQ(inputArgs.size(), 1);
-  auto type = inputArgs[0].type;
-  if (type->isShortDecimal()) {
-    return std::make_shared<AbsFunction<int64_t>>();
-  }
-  if (type->isLongDecimal()) {
-    return std::make_shared<AbsFunction<int128_t>>();
-  }
-  switch (type->kind()) {
-    default:
-      VELOX_FAIL("Not support this type {} in abs", type->kindName())
   }
 }
 
