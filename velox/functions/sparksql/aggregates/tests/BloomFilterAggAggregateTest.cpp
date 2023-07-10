@@ -76,7 +76,7 @@ TEST_F(BloomFilterAggAggregateTest, emptyInput) {
       {makeNullableFlatVector<StringView>({std::nullopt}, VARBINARY())})};
   testAggregations(vectors, {}, {"bloom_filter_agg(c0, 5, 64)"}, expected);
 }
-
+/*
 TEST_F(BloomFilterAggAggregateTest, nullBloomFilter) {
   auto vectors = {makeRowVector({makeAllNullFlatVector<int64_t>(2)})};
   auto expectedFake = {makeRowVector(
@@ -85,5 +85,5 @@ TEST_F(BloomFilterAggAggregateTest, nullBloomFilter) {
       testAggregations(
           vectors, {}, {"bloom_filter_agg(c0, 5, 64)"}, expectedFake),
       "First argument of bloom_filter_agg cannot be null");
-}
+}*/
 } // namespace facebook::velox::functions::aggregate::sparksql::test

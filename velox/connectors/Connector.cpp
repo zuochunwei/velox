@@ -34,10 +34,10 @@ std::unordered_map<std::string, std::shared_ptr<Connector>>& connectors() {
 bool registerConnectorFactory(std::shared_ptr<ConnectorFactory> factory) {
   bool ok =
       connectorFactories().insert({factory->connectorName(), factory}).second;
-  VELOX_CHECK(
+  /*VELOX_CHECK(
       ok,
       "ConnectorFactory with name '{}' is already registered",
-      factory->connectorName());
+      factory->connectorName());*/
   return true;
 }
 

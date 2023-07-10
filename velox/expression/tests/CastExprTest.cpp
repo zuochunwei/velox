@@ -567,6 +567,8 @@ TEST_F(CastExprTest, sparkSemantic) {
   setCastIntAllowDecimalAndByTruncate(true);
   testCast<float, bool>(
       "bool", {0.5, -0.5, 1, 0}, {true, true, true, false}, false, true);
+  testCast<double, bool>(
+      "bool", {0.5, -0.5, 1, 0}, {true, true, true, false}, false, true);
 }
 
 constexpr vector_size_t kVectorSize = 1'000;

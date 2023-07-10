@@ -326,12 +326,9 @@ struct Converter<
       }
       if constexpr (std::is_same_v<T, int128_t>) {
         return std::numeric_limits<int128_t>::min();
-      } else if (v < LimitType::minLimit()) {
-        return LimitType::min();
-      }
-      // bool type's min is 0, but spark expects true for casting negative float
-      // data.
-      if (!std::is_same_v<T, bool> && v < LimitType::minLimit()) {
+      } else if (!std::is_same_v<T, bool> && v < LimitType::minLimit()) {
+        // bool type's min is 0, but spark expects true for casting negative
+        // float data.
         return LimitType::min();
       }
       return LimitType::cast(v);
