@@ -116,6 +116,8 @@ class SelectiveStructColumnReaderBase : public SelectiveColumnReader {
     return hasMutation_;
   }
 
+  void setOutputType(const RowTypePtr& outputType);
+
   const std::shared_ptr<const dwio::common::TypeWithId> requestedType_;
 
   std::vector<SelectiveColumnReader*> children_;
@@ -141,6 +143,13 @@ class SelectiveStructColumnReaderBase : public SelectiveColumnReader {
   // and query. Set at construction, which takes place on first
   // use. If no ExceptionContext is in effect, this is "".
   const std::string debugString_;
+
+ private:
+  void checkOutputType(
+      const RowTypePtr& outputType,
+      const RowTypePtr& requestedType);
+
+  RowTypePtr outputType_ = nullptr;
 };
 
 struct SelectiveStructColumnReader : SelectiveStructColumnReaderBase {
