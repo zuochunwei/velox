@@ -325,6 +325,48 @@ TEST_F(ParquetTableScanTest, missingField) {
   assertSelectWithFilter({"name"}, {}, "", "SELECT row(null)");
 }
 
+TEST_F(ParquetTableScanTest, readAsLowerCase) {
+  auto plan = PlanBuilder(pool_.get())
+                  .tableScan(ROW({"contactid"}, {INTEGER()}), {}, "")
+                  .planNode();
+  CursorParameters params;
+  std::shared_ptr<folly::Executor> executor =
+      std::make_shared<folly::CPUThreadPoolExecutor>(
+          std::thread::hardware_concurrency());
+  std::shared_ptr<core::QueryCtx> queryCtx =
+      std::make_shared<core::QueryCtx>(executor.get());
+  std::unordered_map<std::string, std::string> configs = {
+      {std::string(
+           connector::hive::HiveConfig::kFileColumnNamesReadAsLowerCase),
+       "true"}};
+  queryCtx->setConnectorConfigOverridesUnsafe(
+      kHiveConnectorId, std::move(configs));
+  params.queryCtx = queryCtx;
+  params.planNode = plan;
+  const int numSplitsPerFile = 1;
+
+  bool noMoreSplits = false;
+  auto addSplits = [&](exec::Task* task) {
+    if (!noMoreSplits) {
+      auto const splits = HiveConnectorTestBase::makeHiveConnectorSplits(
+          {getExampleFilePath("departments.parquet")},
+          numSplitsPerFile,
+          dwio::common::FileFormat::PARQUET);
+      for (const auto& split : splits) {
+        task->addSplit("0", exec::Split(split));
+      }
+
+      task->noMoreSplits("0");
+    }
+    noMoreSplits = true;
+  };
+  auto result = readCursor(params, addSplits);
+  ASSERT_TRUE(waitForTaskCompletion(result.first->task().get()));
+  auto vector = makeFlatVector<int32_t>({1, 4});
+  auto expected = makeRowVector({"contactid"}, {vector});
+  assertEqualResults(result.second, {expected});
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   folly::init(&argc, &argv, false);

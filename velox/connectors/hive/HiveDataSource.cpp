@@ -289,6 +289,9 @@ void checkColumnNameLowerCase(const SubfieldFilters& filters) {
 }
 
 void checkColumnNameLowerCase(const core::TypedExprPtr& typeExpr) {
+  if (typeExpr == nullptr) {
+    return;
+  }
   checkColumnNameLowerCase(typeExpr->type());
   for (auto& type : typeExpr->inputs()) {
     checkColumnNameLowerCase(type);
@@ -466,6 +469,8 @@ HiveDataSource::HiveDataSource(
     readerOutputType_ = ROW(std::move(names), std::move(types));
   }
   readerOpts_.setFileSchema(hiveTableHandle->dataColumns());
+  readerOpts_.setFileColumnNamesReadAsLowerCase(fileColumnNamesReadAsLowerCase);
+  rowReaderOpts_.setOutputType(readerOutputType_);
   rowReaderOpts_.setScanSpec(scanSpec_);
   rowReaderOpts_.setMetadataFilter(metadataFilter_);
 

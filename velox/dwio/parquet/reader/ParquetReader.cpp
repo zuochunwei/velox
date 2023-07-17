@@ -532,8 +532,7 @@ int64_t ReaderBase::rowGroupUncompressedSize(
 
 ParquetRowReader::ParquetRowReader(
     const std::shared_ptr<ReaderBase>& readerBase,
-    const dwio::common::RowReaderOptions& options,
-    bool caseSensitive)
+    const dwio::common::RowReaderOptions& options)
     : pool_(readerBase->getMemoryPool()),
       readerBase_(readerBase),
       options_(options),
@@ -564,7 +563,7 @@ ParquetRowReader::ParquetRowReader(
       readerBase_->schemaWithId(), // Id is schema id
       params,
       *options_.getScanSpec(),
-      caseSensitive,
+      readerBase_->isFileColumnNamesReadAsLowerCase(),
       options_.getOutputType(),
       pool_);
 
@@ -692,7 +691,6 @@ ParquetReader::ParquetReader(
 
 std::unique_ptr<dwio::common::RowReader> ParquetReader::createRowReader(
     const dwio::common::RowReaderOptions& options) const {
-  return std::make_unique<ParquetRowReader>(
-      readerBase_, options, readerBase_->isFileColumnNamesReadAsLowerCase());
+  return std::make_unique<ParquetRowReader>(readerBase_, options);
 }
 } // namespace facebook::velox::parquet

@@ -31,13 +31,42 @@ RowTypePtr typeNameInLowerCase(const RowTypePtr& rowTypePtr) {
   }
   return std::make_shared<RowType>(std::move(names), std::move(types));
 }
+
+bool containsChild(
+    const TypePtr& type,
+    const std::string& name,
+    bool isFileColumnNamesReadAsLowerCase) {
+  VELOX_CHECK_EQ(type->kind(), velox::TypeKind::ROW);
+  if (!isFileColumnNamesReadAsLowerCase) {
+    return type->as<velox::TypeKind::ROW>().containsChild(name);
+  }
+  const auto& newType = typeNameInLowerCase(asRowType(type));
+  std::string nameInLowerCase = name;
+  folly::toLowerAscii(nameInLowerCase);
+  return newType->containsChild(nameInLowerCase);
+}
+
+uint32_t getChildIdx(
+    const TypePtr& type,
+    const std::string& name,
+    bool isFileColumnNamesReadAsLowerCase) {
+  VELOX_CHECK_EQ(type->kind(), velox::TypeKind::ROW);
+  if (!isFileColumnNamesReadAsLowerCase) {
+    return type->as<velox::TypeKind::ROW>().getChildIdx(name);
+  }
+  const auto& newType = typeNameInLowerCase(asRowType(type));
+  std::string nameInLowerCase = name;
+  folly::toLowerAscii(nameInLowerCase);
+  return newType->as<velox::TypeKind::ROW>().getChildIdx(nameInLowerCase);
+}
+
 } // namespace
 
 StructColumnReader::StructColumnReader(
     const std::shared_ptr<const dwio::common::TypeWithId>& dataType,
     ParquetParams& params,
     common::ScanSpec& scanSpec,
-    bool caseSensitive,
+    bool isFileColumnNamesReadAsLowerCase,
     const TypePtr& colType,
     memory::MemoryPool& pool)
     : SelectiveStructColumnReader(dataType, dataType, params, scanSpec) {
@@ -50,7 +79,7 @@ StructColumnReader::StructColumnReader(
   setOutputType(rowTypePtr);
 
   auto& childSpecs = scanSpec_->stableChildren();
-  if (rowTypePtr && !caseSensitive) {
+  if (rowTypePtr && isFileColumnNamesReadAsLowerCase) {
     rowTypePtr = typeNameInLowerCase(rowTypePtr);
   }
   int numOfMissingFields = 0;
@@ -59,24 +88,27 @@ StructColumnReader::StructColumnReader(
       continue;
     }
     std::string fieldName = childSpecs[i]->fieldName();
-    if (!caseSensitive) {
+    if (isFileColumnNamesReadAsLowerCase) {
       folly::toLowerAscii(fieldName);
     }
     // Set null constant for the missing child field of output type.
-    if (rowTypePtr && !nodeType_->containsChild(fieldName)) {
+    if (rowTypePtr &&
+        !containsChild(
+            nodeType_->type, fieldName, isFileColumnNamesReadAsLowerCase)) {
       childSpecs[i]->setConstantValue(BaseVector::createNullConstant(
           rowTypePtr->findChild(fieldName), 1, &pool));
       numOfMissingFields += 1;
       continue;
     }
 
-    auto childDataType = nodeType_->childByName(fieldName);
+    auto childDataType = nodeType_->childAt(getChildIdx(
+        nodeType_->type, fieldName, isFileColumnNamesReadAsLowerCase));
 
     addChild(ParquetColumnReader::build(
         childDataType,
         params,
         *childSpecs[i],
-        caseSensitive,
+        isFileColumnNamesReadAsLowerCase,
         rowTypePtr ? rowTypePtr->findChild(fieldName) : nullptr,
         pool));
     childSpecs[i]->setSubscript(children_.size() - 1);

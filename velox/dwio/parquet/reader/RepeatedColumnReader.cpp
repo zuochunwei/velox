@@ -115,7 +115,7 @@ MapColumnReader::MapColumnReader(
     std::shared_ptr<const dwio::common::TypeWithId> requestedType,
     ParquetParams& params,
     common::ScanSpec& scanSpec,
-    bool caseSensitive,
+    bool isFileColumnNamesReadAsLowerCase,
     const TypePtr& colType,
     memory::MemoryPool& pool)
     : dwio::common::SelectiveMapColumnReader(
@@ -132,14 +132,14 @@ MapColumnReader::MapColumnReader(
       keyChildType,
       params,
       *scanSpec.children()[0],
-      caseSensitive,
+      isFileColumnNamesReadAsLowerCase,
       mapTypePtr ? mapTypePtr->keyType() : nullptr,
       pool);
   elementReader_ = ParquetColumnReader::build(
       elementChildType,
       params,
       *scanSpec.children()[1],
-      caseSensitive,
+      isFileColumnNamesReadAsLowerCase,
       mapTypePtr ? mapTypePtr->valueType() : nullptr,
       pool);
   reinterpret_cast<const ParquetTypeWithId*>(requestedType.get())
@@ -239,7 +239,7 @@ ListColumnReader::ListColumnReader(
     std::shared_ptr<const dwio::common::TypeWithId> requestedType,
     ParquetParams& params,
     common::ScanSpec& scanSpec,
-    bool caseSensitive,
+    bool isFileColumnNamesReadAsLowerCase,
     const TypePtr& colType,
     memory::MemoryPool& pool)
     : dwio::common::SelectiveListColumnReader(
@@ -255,7 +255,7 @@ ListColumnReader::ListColumnReader(
       childType,
       params,
       *scanSpec.children()[0],
-      caseSensitive,
+      isFileColumnNamesReadAsLowerCase,
       arrayTypePtr ? arrayTypePtr->elementType() : nullptr,
       pool);
   reinterpret_cast<const ParquetTypeWithId*>(requestedType.get())

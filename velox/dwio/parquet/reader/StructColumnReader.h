@@ -27,7 +27,7 @@ class StructColumnReader : public dwio::common::SelectiveStructColumnReader {
       const std::shared_ptr<const dwio::common::TypeWithId>& dataType,
       ParquetParams& params,
       common::ScanSpec& scanSpec,
-      bool caseSensitive,
+      bool isFileColumnNamesReadAsLowerCase,
       const TypePtr& colType,
       memory::MemoryPool& pool);
 
