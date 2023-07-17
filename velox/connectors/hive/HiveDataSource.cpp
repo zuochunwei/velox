@@ -854,7 +854,7 @@ void HiveDataSource::configureRowReaderOptions(
         reader_->rowType(),
         columnNames,
         nullptr,
-        readerOpts_.isCaseSensitive());
+        readerOpts_.isFileColumnNamesReadAsLowerCase());
   }
   options.select(cs).range(split_->start, split_->length);
 }

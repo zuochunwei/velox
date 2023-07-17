@@ -475,11 +475,6 @@ struct Converter<
     VELOX_UNSUPPORTED(
         "Conversion of Timestamp to Real or Double is not supported");
   }
-
-  static T cast(const int128_t& d) {
-    VELOX_UNSUPPORTED(
-        "Conversion of int128_t to Real or Double is not supported");
-  }
 };
 
 template <bool TRUNCATE, bool ALLOW_DECIMAL>

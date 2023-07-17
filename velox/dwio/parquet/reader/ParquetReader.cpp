@@ -693,6 +693,6 @@ ParquetReader::ParquetReader(
 std::unique_ptr<dwio::common::RowReader> ParquetReader::createRowReader(
     const dwio::common::RowReaderOptions& options) const {
   return std::make_unique<ParquetRowReader>(
-      readerBase_, options, readerBase_->isCaseSensitive());
+      readerBase_, options, readerBase_->isFileColumnNamesReadAsLowerCase());
 }
 } // namespace facebook::velox::parquet
