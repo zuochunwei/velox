@@ -48,19 +48,6 @@ void applyCastKernel(
     vector_size_t row,
     const SimpleVector<typename TypeTraits<FromKind>::NativeType>* input,
     FlatVector<typename TypeTraits<ToKind>::NativeType>* result) {
-  if (input->type()->isDecimal()) {
-    // Special handling for decimal types.
-    auto [precision, scale] = getDecimalPrecisionScale(*input->type());
-    if constexpr (ToKind == TypeKind::DOUBLE) {
-      auto output = util::
-          Converter<CppToType<double>::typeKind, void, Truncate, AllowDecimal>::
-              cast(input->valueAt(row));
-      result->set(row, output / (double)DecimalUtil::kPowersOfTen[scale]);
-    }
-    return;
-  }
-  auto output = util::Converter<ToKind, void, Truncate, AllowDecimal>::cast(
-      input->valueAt(row));
   if constexpr (ToKind == TypeKind::VARCHAR || ToKind == TypeKind::VARBINARY) {
     std::string output;
     if (input->type()->isDecimal()) {
