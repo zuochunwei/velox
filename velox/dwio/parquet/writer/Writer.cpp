@@ -17,6 +17,7 @@
 #include "velox/vector/arrow/Bridge.h"
 
 #include <arrow/c/bridge.h> // @manual
+#include <arrow/record_batch.h>
 #include <arrow/table.h> // @manual
 #include <parquet/arrow/writer.h> // @manual
 #include "velox/dwio/parquet/writer/Writer.h"
@@ -120,7 +121,8 @@ std::shared_ptr<::parquet::WriterProperties> getArrowParquetWriterOptions(
 Writer::Writer(
     std::unique_ptr<dwio::common::DataSink> sink,
     const WriterOptions& options,
-    std::shared_ptr<memory::MemoryPool> pool)
+    std::shared_ptr<memory::MemoryPool> pool,
+    std::shared_ptr<arrow::Schema> schema)
     : rowsInRowGroup_(options.rowsInRowGroup),
       bytesInRowGroup_(options.bytesInRowGroup),
       bufferGrowRatio_(options.bufferGrowRatio),
@@ -130,13 +132,15 @@ Writer::Writer(
           std::move(sink),
           *generalPool_,
           options.bufferGrowRatio)),
-      arrowContext_(std::make_shared<ArrowContext>()) {
+      arrowContext_(std::make_shared<ArrowContext>()),
+      schema_(schema) {
   arrowContext_->properties = getArrowParquetWriterOptions(options);
 }
 
 Writer::Writer(
     std::unique_ptr<dwio::common::DataSink> sink,
-    const WriterOptions& options)
+    const WriterOptions& options,
+    std::shared_ptr<arrow::Schema> schema)
     : Writer{
           std::move(sink),
           options,
@@ -195,8 +199,15 @@ void Writer::write(const VectorPtr& data) {
   ArrowSchema schema;
   exportToArrow(data, array, generalPool_.get());
   exportToArrow(data, schema);
-  PARQUET_ASSIGN_OR_THROW(
-      auto recordBatch, arrow::ImportRecordBatch(&array, &schema));
+  std::shared_ptr<arrow::RecordBatch> recordBatch;
+  if (schema_) {
+    PARQUET_ASSIGN_OR_THROW(
+        recordBatch, arrow::ImportRecordBatch(&array, schema_));
+  } else {
+    PARQUET_ASSIGN_OR_THROW(
+        recordBatch, arrow::ImportRecordBatch(&array, &schema));
+  }
+
   if (!arrowContext_->schema) {
     arrowContext_->schema = recordBatch->schema();
     for (int colIdx = 0; colIdx < arrowContext_->schema->num_fields();
