@@ -140,6 +140,14 @@ HashAggregation::HashAggregation(
     }
   }
 
+  std::cout << "[zuochunwei] HashAggregation ctor, isPartialOutput_:"
+            << isPartialOutput_ << ", isDistinct_:" << isDistinct_
+            << ", isGlobal_:" << isGlobal_
+            << ", isIntermediate_:" << isIntermediate_
+            << ", numAggregates:" << numAggregates
+            << ", spillConfig_.has_value:"
+            << (spillConfig_.has_value() ? "1" : "0") << std::endl;
+
   groupingSet_ = std::make_unique<GroupingSet>(
       std::move(hashers),
       std::move(preGroupedChannels),

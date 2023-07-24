@@ -519,6 +519,13 @@ const HashLookup& GroupingSet::hashLookup() const {
 void GroupingSet::ensureInputFits(const RowVectorPtr& input) {
   // Spilling is considered if this is a final or single aggregation and
   // spillPath is set.
+
+  std::cout << "[zuochunwei] testSpillPct:"
+            << (spillConfig_ ? spillConfig_->testSpillPct : 0)
+            << ", spillConfig_:" << (spillConfig_ ? "not null" : "null")
+            << ", isPartial_:" << isPartial_ << ", numDistinct"
+            << table_->numDistinct() << std::endl;
+
   if (isPartial_ || spillConfig_ == nullptr) {
     return;
   }
@@ -529,7 +536,6 @@ void GroupingSet::ensureInputFits(const RowVectorPtr& input) {
   }
 
   auto tableIncrement = table_->hashTableSizeIncrease(input->size());
-
   auto rows = table_->rows();
 
   auto [freeRows, outOfLineFreeBytes] = rows->freeSpace();
@@ -539,11 +545,20 @@ void GroupingSet::ensureInputFits(const RowVectorPtr& input) {
 
   int64_t flatBytes = input->estimateFlatSize();
 
+  std::cout << "[zuochunwei] testSpillPct:" << spillConfig_->testSpillPct
+            << " freeRows:" << freeRows
+            << " outOfLineFreeBytes:" << outOfLineFreeBytes
+            << " outOfLineBytes:" << outOfLineBytes
+            << " outOfLineBytesPerRow:" << outOfLineBytesPerRow
+            << " flatBytes:" << flatBytes << std::endl;
+
   // Test-only spill path.
   if (spillConfig_->testSpillPct > 0 &&
       (folly::hasher<uint64_t>()(++spillTestCounter_)) % 100 <=
           spillConfig_->testSpillPct) {
     const auto rowsToSpill = std::max<int64_t>(1, numDistinct / 10);
+    std::cout << "[zuochunwei] rowsToSpill:" << rowsToSpill << std::endl;
+
     spill(
         numDistinct - rowsToSpill,
         outOfLineBytes - (rowsToSpill * outOfLineBytesPerRow));
@@ -551,12 +566,22 @@ void GroupingSet::ensureInputFits(const RowVectorPtr& input) {
   }
 
   const auto currentUsage = pool_.currentBytes();
+
+  std::cout << "[zuochunwei] spillMemoryThreshold_:" << spillMemoryThreshold_
+            << " pool_.highUsage:" << pool_.highUsage()
+            << " currentUsage:" << currentUsage << std::endl;
+
   if ((spillMemoryThreshold_ != 0 && currentUsage > spillMemoryThreshold_) ||
       pool_.highUsage()) {
     const int64_t bytesToSpill =
         currentUsage * spillConfig_->spillableReservationGrowthPct / 100;
     auto rowsToSpill = std::max<int64_t>(
         1, bytesToSpill / (rows->fixedRowSize() + outOfLineBytesPerRow));
+
+    std::cout << "[zuochunwei] "
+              << " bytesToSpill:" << bytesToSpill
+              << " rowsToSpill:" << rowsToSpill << std::endl;
+
     spill(
         std::max<int64_t>(0, numDistinct - rowsToSpill),
         std::max<int64_t>(
@@ -569,6 +594,7 @@ void GroupingSet::ensureInputFits(const RowVectorPtr& input) {
     // Enough free rows for input rows and enough variable length free
     // space for the flat size of the whole vector. If outOfLineBytes
     // is 0 there is no need for variable length space.
+    std::cout << "[zuochunwei] coming and return" << std::endl;
     return;
   }
   // If there is variable length data we take the flat size of the
@@ -604,6 +630,10 @@ void GroupingSet::spill(int64_t targetRows, int64_t targetBytes) {
   // NOTE: if the disk spilling is triggered by the memory arbitrator, then it
   // is possible that the grouping set hasn't processed any input data yet.
   // Correspondingly, 'table_' will not be initialized at that point.
+
+  std::cout << "[zuochunwei] table_:" << table_ << " spiller_:" << spiller_
+            << std::endl;
+
   if (table_ == nullptr) {
     return;
   }

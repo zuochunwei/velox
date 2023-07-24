@@ -350,6 +350,9 @@ bool Spiller::needSort() const {
 void Spiller::spill(uint64_t targetRows, uint64_t targetBytes) {
   VELOX_CHECK(!spillFinalized_);
 
+  std::cout << "[zuochunwei] Spiller::spill() targetRows:" << targetRows
+            << ", targetBytes:" << targetBytes << std::endl;
+
   if (type_ == Type::kHashJoinBuild || type_ == Type::kHashJoinProbe) {
     VELOX_FAIL("Don't support incremental spill on type: {}", typeName(type_));
   }
