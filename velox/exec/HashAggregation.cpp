@@ -15,6 +15,7 @@
  */
 #include "velox/exec/HashAggregation.h"
 #include <optional>
+#include <iostream>
 #include "velox/exec/Aggregate.h"
 #include "velox/exec/OperatorUtils.h"
 #include "velox/exec/Task.h"

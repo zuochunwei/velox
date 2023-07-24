@@ -16,6 +16,7 @@
 
 #include "velox/exec/Spiller.h"
 #include <folly/ScopeGuard.h>
+#include <iostream>
 #include "velox/common/base/AsyncSource.h"
 #include "velox/common/testutil/TestValue.h"
 #include "velox/exec/Aggregate.h"

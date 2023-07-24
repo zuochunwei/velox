@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <iostream>
+
 #include "velox/exec/GroupingSet.h"
 #include "velox/exec/Aggregate.h"
 #include "velox/exec/Task.h"
@@ -631,8 +633,8 @@ void GroupingSet::spill(int64_t targetRows, int64_t targetBytes) {
   // is possible that the grouping set hasn't processed any input data yet.
   // Correspondingly, 'table_' will not be initialized at that point.
 
-  std::cout << "[zuochunwei] table_:" << table_ << " spiller_:" << spiller_
-            << std::endl;
+  std::cout << "[zuochunwei] table_:" << table_.get()
+            << " spiller_:" << spiller_.get() << std::endl;
 
   if (table_ == nullptr) {
     return;
