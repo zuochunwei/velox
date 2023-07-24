@@ -611,8 +611,17 @@ class AggregationNode : public PlanNode {
     // (https://github.com/facebookincubator/velox/issues/3263) and pre-grouped
     // aggregation (https://github.com/facebookincubator/velox/issues/3264). We
     // will add support later to re-enable.
-    return (isFinal() || isSingle()) && !(aggregates().empty()) &&
+    bool ret = (isFinal() || isSingle()) && !(aggregates().empty()) &&
         preGroupedKeys().empty() && queryConfig.aggregationSpillEnabled();
+
+    std::cout << "[zuochunwei] ret = " << ret << " isFinal:" << isFinal()
+              << " isSingle:" << isSingle()
+              << " aggregates().empty:" << aggregates().empty()
+              << " preGroupedKeys().empty:" << preGroupedKeys().empty()
+              << " queryConfig.aggregationSpillEnabled:"
+              << queryConfig.aggregationSpillEnabled() << std::endl;
+
+    return ret;
   }
 
   bool isFinal() const {

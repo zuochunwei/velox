@@ -52,11 +52,14 @@ velox::memory::MemoryPool* DriverCtx::addOperatorPool(
 
 std::optional<Spiller::Config> DriverCtx::makeSpillConfig(
     int32_t operatorId) const {
+  std::cout << "[zuochunwei] DriverCtx::makeSpillConfig enter" << std::endl;
   const auto& queryConfig = task->queryCtx()->queryConfig();
   if (!queryConfig.spillEnabled()) {
+    std::cout << "[zuochunwei] spillEnabled false" << std::endl;
     return std::nullopt;
   }
   if (task->spillDirectory().empty()) {
+    std::cout << "[zuochunwei] spillDirectory empty" << std::endl;
     return std::nullopt;
   }
   return Spiller::Config(
