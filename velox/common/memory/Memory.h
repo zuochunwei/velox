@@ -86,8 +86,9 @@ class IMemoryManager {
     /// Specifies the backing memory allocator.
     MemoryAllocator* allocator{MemoryAllocator::getInstance()};
 
-    /// Specifies the memory arbitration config.
-    MemoryArbitrator::Config arbitratorConfig{};
+    /// Specifies the memory arbitrator
+    std::function<std::unique_ptr<MemoryArbitrator>()> arbitratorFactory{
+        []() { return MemoryArbitrator::create({}); }};
   };
 
   virtual ~IMemoryManager() = default;
@@ -117,6 +118,10 @@ class IMemoryManager {
   virtual std::shared_ptr<MemoryPool> addLeafPool(
       const std::string& name = "",
       bool threadSafe = true) = 0;
+
+  /// Invoked to shrink a memory pool's free capacity with up to
+  /// 'decrementBytes'.
+  virtual uint64_t shrinkPool(MemoryPool* pool, uint64_t decrementBytes) = 0;
 
   /// Invoked to grows a memory pool's free capacity with at least
   /// 'incrementBytes'. The function returns true on success, otherwise false.
@@ -196,6 +201,7 @@ class MemoryManager final : public IMemoryManager {
       const std::string& name = "",
       bool threadSafe = true) final;
 
+  uint64_t shrinkPool(MemoryPool* pool, uint64_t decrementBytes) final;
   bool growPool(MemoryPool* pool, uint64_t incrementBytes) final;
 
   MemoryPool& deprecatedSharedLeafPool() final;

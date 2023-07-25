@@ -577,18 +577,6 @@ int64_t MemoryPoolImpl::capacity() const {
   return capacity_;
 }
 
-bool MemoryPoolImpl::highUsage() {
-  if (parent_ != nullptr) {
-    return parent_->highUsage();
-  }
-
-  if (highUsageCallback_ != nullptr) {
-    return highUsageCallback_(*this);
-  }
-
-  return false;
-}
-
 std::shared_ptr<MemoryPool> MemoryPoolImpl::genChild(
     std::shared_ptr<MemoryPool> parent,
     const std::string& name,
@@ -742,6 +730,16 @@ bool MemoryPoolImpl::incrementReservationThreadSafe(
           succinctBytes(size),
           capacityToString(manager_->capacity()))));
 }
+
+uint64_t MemoryPoolImpl::shrinkManaged(
+    MemoryPool* requestor,
+    uint64_t targetBytes) {
+  if (parent_ != nullptr) {
+    return parent_->shrinkManaged(requestor, targetBytes);
+  }
+  VELOX_CHECK_NULL(parent_);
+  return manager_->shrinkPool(requestor, targetBytes);
+};
 
 bool MemoryPoolImpl::maybeIncrementReservation(uint64_t size) {
   std::lock_guard<std::mutex> l(mutex_);

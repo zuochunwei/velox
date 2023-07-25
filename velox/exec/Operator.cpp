@@ -460,7 +460,7 @@ uint64_t Operator::MemoryReclaimer::reclaim(
   VELOX_CHECK(driver->task()->pauseRequested());
 
   op_->reclaim(targetBytes);
-  return pool->shrink(targetBytes);
+  return pool->shrinkManaged(pool, targetBytes);
 }
 
 void Operator::MemoryReclaimer::abort(memory::MemoryPool* pool) {

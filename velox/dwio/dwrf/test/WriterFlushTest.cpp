@@ -147,10 +147,6 @@ class MockMemoryPool : public velox::memory::MemoryPool {
     VELOX_UNSUPPORTED("freeContiguous unsupported");
   }
 
-  bool highUsage() override {
-    VELOX_NYI("{} unsupported", __FUNCTION__);
-  }
-
   int64_t currentBytes() const override {
     return localMemoryUsage_;
   }
@@ -202,6 +198,10 @@ class MockMemoryPool : public velox::memory::MemoryPool {
   }
 
   uint64_t shrink(uint64_t /*unused*/) override {
+    VELOX_UNSUPPORTED("{} unsupported", __FUNCTION__);
+  }
+
+  uint64_t shrinkManaged(MemoryPool* /*unused*/, uint64_t /*unused*/) override {
     VELOX_UNSUPPORTED("{} unsupported", __FUNCTION__);
   }
 

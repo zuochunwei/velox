@@ -192,7 +192,7 @@ class MockMemoryOperator {
     for (const auto& allocation : allocationsToFree) {
       pool_->free(allocation.buffer, allocation.size);
     }
-    return pool_->shrink(targetBytes);
+    return pool_->shrinkManaged(pool, targetBytes);
   }
 
   void abort(MemoryPool* pool) {
@@ -371,12 +371,15 @@ class MockSharedArbitrationTest : public testing::Test {
     }
     IMemoryManager::Options options;
     options.capacity = (memoryCapacity != 0) ? memoryCapacity : kMemoryCapacity;
-    options.arbitratorConfig = {
+    MemoryArbitrator::Config arbitratorConfig{
         .kind = MemoryArbitrator::Kind::kShared,
         .capacity = options.capacity,
         .initMemoryPoolCapacity = initMemoryPoolCapacity,
         .minMemoryPoolCapacityTransferSize = minMemoryPoolCapacityTransferSize,
         .retryArbitrationFailure = retryArbitrationFailure};
+    options.arbitratorFactory = [&]() {
+      return MemoryArbitrator::create(arbitratorConfig);
+    };
     options.checkUsageLeak = true;
     manager_ = std::make_unique<MemoryManager>(options);
     ASSERT_EQ(manager_->arbitrator()->kind(), MemoryArbitrator::Kind::kShared);
