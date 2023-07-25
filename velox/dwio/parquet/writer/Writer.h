@@ -95,8 +95,6 @@ class Writer : public dwio::common::Writer {
   std::shared_ptr<ArrowDataBufferSink> stream_;
 
   std::shared_ptr<ArrowContext> arrowContext_;
-
-  std::shared_ptr<arrow::Schema> schema_;
 };
 
 class ParquetWriterFactory : public dwio::common::WriterFactory {

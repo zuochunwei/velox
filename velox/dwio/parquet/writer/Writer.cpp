@@ -132,9 +132,25 @@ Writer::Writer(
           std::move(sink),
           *generalPool_,
           options.bufferGrowRatio)),
-      arrowContext_(std::make_shared<ArrowContext>()),
-      schema_(schema) {
+      arrowContext_(std::make_shared<ArrowContext>()) {
   arrowContext_->properties = getArrowParquetWriterOptions(options);
+  arrowContext_->schema = schema;
+
+  if (arrowContext_->schema) {
+    // If the input iterator is empty, the writer will do nothing and build a
+    // empty file. We should at least write the parquet magic header so the
+    // reader can regonize it is a valid parquet file. So, we initialize the
+    // writer at first even there is no data.
+    auto arrowProperties = ::parquet::ArrowWriterProperties::Builder().build();
+    PARQUET_ASSIGN_OR_THROW(
+        arrowContext_->writer,
+        ::parquet::arrow::FileWriter::Open(
+            *arrowContext_->schema.get(),
+            arrow::default_memory_pool(),
+            stream_,
+            arrowContext_->properties,
+            arrowProperties));
+  }
 }
 
 Writer::Writer(
@@ -196,20 +212,23 @@ void Writer::flush() {
  */
 void Writer::write(const VectorPtr& data) {
   ArrowArray array;
-  ArrowSchema schema;
   exportToArrow(data, array, generalPool_.get());
-  exportToArrow(data, schema);
   std::shared_ptr<arrow::RecordBatch> recordBatch;
-  if (schema_) {
+  if (arrowContext_->schema) {
     PARQUET_ASSIGN_OR_THROW(
-        recordBatch, arrow::ImportRecordBatch(&array, schema_));
+        recordBatch, arrow::ImportRecordBatch(&array, arrowContext_->schema));
   } else {
+    ArrowSchema schema;
+    exportToArrow(data, schema);
     PARQUET_ASSIGN_OR_THROW(
         recordBatch, arrow::ImportRecordBatch(&array, &schema));
   }
 
-  if (!arrowContext_->schema) {
-    arrowContext_->schema = recordBatch->schema();
+  if (arrowContext_->stagingChunks.empty()) {
+    if (!arrowContext_->schema) {
+      arrowContext_->schema = recordBatch->schema();
+    }
+
     for (int colIdx = 0; colIdx < arrowContext_->schema->num_fields();
          colIdx++) {
       arrowContext_->stagingChunks.push_back(
