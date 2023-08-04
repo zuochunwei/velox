@@ -376,7 +376,7 @@ void AggregationTest::setTestKey(
 
 TEST_F(AggregationTest, distinctWithSpilling) {
   auto vectors = makeVectors(rowType_, 10, 20);
-  //createDuckDbTable(vectors);
+  // createDuckDbTable(vectors);
   for (auto& x : vectors) {
     auto str = x->toString(0, 10000, "\n");
     std::cout << str << std::endl;
