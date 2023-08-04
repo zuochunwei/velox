@@ -352,7 +352,7 @@ RowVectorPtr HashAggregation::getOutput() {
   // - partial aggregation reached memory limit;
   // - distinct aggregation has new keys;
   // - running in partial streaming mode and have some output ready.
-  if (!noMoreInput_ && !partialFull_ && !newDistincts_ && 
+  if (!noMoreInput_ && !partialFull_ && !newDistincts_ &&
       !groupingSet_->hasOutput()) {
     input_ = nullptr;
     return nullptr;
