@@ -139,6 +139,8 @@ class AssertQueryBuilder {
   std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
       connectorConfigs_;
   std::unordered_map<core::PlanNodeId, std::vector<Split>> splits_;
+
+  std::shared_ptr<Task> task_;
 };
 
 } // namespace facebook::velox::exec::test
