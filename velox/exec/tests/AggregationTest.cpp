@@ -376,7 +376,7 @@ void AggregationTest::setTestKey(
 
 TEST_F(AggregationTest, distinctWithSpilling) {
   auto vectors = makeVectors(rowType_, 10, 5);
-  //createDuckDbTable(vectors);
+  // createDuckDbTable(vectors);
   for (auto& x : vectors) {
     auto str = x->toString(0, 10000, "\n");
     std::cout << str << std::endl;
@@ -406,8 +406,10 @@ TEST_F(AggregationTest, distinctWithSpilling) {
   std::cout << str << std::endl;
 
   auto task = aqb.task_;
-  std::cout << "spilledBytes: " << toPlanStats(task->taskStats()).at(aggrNodeId).spilledBytes << std::endl;
-  //OperatorTestBase::deleteTaskAndCheckSpillDirectory(task);
+  std::cout << "spilledBytes: "
+            << toPlanStats(task->taskStats()).at(aggrNodeId).spilledBytes
+            << std::endl;
+  // OperatorTestBase::deleteTaskAndCheckSpillDirectory(task);
 #else
   auto task = aqb.assertResults("SELECT distinct c0 FROM tmp");
 
