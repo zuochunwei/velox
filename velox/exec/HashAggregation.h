@@ -80,6 +80,8 @@ class HashAggregation : public Operator {
   int64_t maxPartialAggregationMemoryUsage_;
   std::unique_ptr<GroupingSet> groupingSet_;
 
+  bool distinctAggregationSpillEnabled_{false};
+
   bool partialFull_ = false;
   bool newDistincts_ = false;
   bool finished_ = false;

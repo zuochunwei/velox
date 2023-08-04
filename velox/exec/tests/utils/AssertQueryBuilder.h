@@ -127,7 +127,6 @@ class AssertQueryBuilder {
   /// query returns empty result.
   RowVectorPtr copyResults(memory::MemoryPool* FOLLY_NONNULL pool);
 
- private:
   std::pair<std::unique_ptr<TaskCursor>, std::vector<RowVectorPtr>>
   readCursor();
 

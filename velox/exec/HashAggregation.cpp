@@ -159,6 +159,9 @@ HashAggregation::HashAggregation(
       spillConfig_.has_value() ? &spillConfig_.value() : nullptr,
       &nonReclaimableSection_,
       operatorCtx_.get());
+
+  distinctAggregationSpillEnabled_ =
+      driverCtx->queryConfig().distinctAggregationSpillEnabled();
 }
 
 bool HashAggregation::abandonPartialAggregationEarly(int64_t numOutput) const {
@@ -198,7 +201,7 @@ void HashAggregation::addInput(RowVectorPtr input) {
 
   const bool abandonPartialEarly = isPartialOutput_ && !isGlobal_ &&
       abandonPartialAggregationEarly(groupingSet_->numDistinct());
-  if (isDistinct_) {
+  if (isDistinct_ && !distinctAggregationSpillEnabled_) {
     newDistincts_ = !groupingSet_->hashLookup().newGroups.empty();
 
     if (newDistincts_) {
@@ -349,13 +352,13 @@ RowVectorPtr HashAggregation::getOutput() {
   // - partial aggregation reached memory limit;
   // - distinct aggregation has new keys;
   // - running in partial streaming mode and have some output ready.
-  if (!noMoreInput_ && !partialFull_ && !newDistincts_ &&
+  if (!noMoreInput_ && !partialFull_ && !newDistincts_ && 
       !groupingSet_->hasOutput()) {
     input_ = nullptr;
     return nullptr;
   }
 
-  if (isDistinct_) {
+  if (isDistinct_ && !distinctAggregationSpillEnabled_) {
     if (!newDistincts_) {
       if (noMoreInput_) {
         finished_ = true;
@@ -372,8 +375,8 @@ RowVectorPtr HashAggregation::getOutput() {
     auto output = fillOutput(size, indices);
     numOutputRows_ += size;
 
-    // Drop reference to input_ to make it singly-referenced at the producer and
-    // allow for memory reuse.
+    // Drop reference to input_ to make it singly-referenced at the producer
+    // and allow for memory reuse.
     input_ = nullptr;
 
     resetPartialOutputIfNeed();
