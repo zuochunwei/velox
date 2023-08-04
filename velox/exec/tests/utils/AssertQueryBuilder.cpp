@@ -182,8 +182,6 @@ std::shared_ptr<Task> AssertQueryBuilder::assertTypeAndNumRows(
 RowVectorPtr AssertQueryBuilder::copyResults(memory::MemoryPool* pool) {
   auto [cursor, results] = readCursor();
 
-  task_ = cursor->task();
-
   if (results.empty()) {
     return BaseVector::create<RowVector>(
         params_.planNode->outputType(), 0, pool);

@@ -127,6 +127,7 @@ class AssertQueryBuilder {
   /// query returns empty result.
   RowVectorPtr copyResults(memory::MemoryPool* FOLLY_NONNULL pool);
 
+ private:
   std::pair<std::unique_ptr<TaskCursor>, std::vector<RowVectorPtr>>
   readCursor();
 
@@ -139,8 +140,6 @@ class AssertQueryBuilder {
   std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
       connectorConfigs_;
   std::unordered_map<core::PlanNodeId, std::vector<Split>> splits_;
-
-  std::shared_ptr<Task> task_;
 };
 
 } // namespace facebook::velox::exec::test
