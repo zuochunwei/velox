@@ -321,6 +321,9 @@ void HashAggregation::resetPartialOutputIfNeed() {
   VELOX_DCHECK(!isGlobal_);
   const double aggregationPct =
       numOutputRows_ == 0 ? 0 : (numOutputRows_ * 1.0) / numInputRows_ * 100;
+
+  char buf[512] = {};
+  sprintf(buf, " {aggregationPct:%f numOutputRows_:%ld numInputRows_:%ld} ", aggregationPct, numOutputRows_, numInputRows_);
   {
     auto lockedStats = stats_.wlock();
     lockedStats->addRuntimeStat(
@@ -332,7 +335,7 @@ void HashAggregation::resetPartialOutputIfNeed() {
   groupingSet_->resetPartial();
   partialFull_ = false;
 
-  debug("resetPartialOutputIfNeed");
+  debug(buf);
 
   if (!finished_) {
     maybeIncreasePartialAggregationMemoryUsage(aggregationPct);
@@ -349,6 +352,15 @@ void HashAggregation::maybeIncreasePartialAggregationMemoryUsage(
   VELOX_DCHECK(isPartialOutput_);
   // If size is at max and there still is not enough reduction, abandon partial
   // aggregation.
+
+  char buf[1024];
+  sprintf(buf, "{numOutputRows_:%ld, aggregationPct:%f, kPartialMinFinalPct:%d, maxPartialAggregationMemoryUsage_:%ld, maxExtendedPartialAggregationMemoryUsage_:%ld}", 
+      numOutputRows_, 
+      aggregationPct, 
+      kPartialMinFinalPct, 
+      (long)maxPartialAggregationMemoryUsage_, 
+      (long)maxExtendedPartialAggregationMemoryUsage_);
+  
   if (abandonPartialAggregationEarly(numOutputRows_) ||
       (aggregationPct > kPartialMinFinalPct &&
        maxPartialAggregationMemoryUsage_ >=
@@ -357,7 +369,7 @@ void HashAggregation::maybeIncreasePartialAggregationMemoryUsage(
     pool()->release();
     addRuntimeStat("abandonedPartialAggregation", RuntimeCounter(1));
     abandonedPartialAggregation_ = true;
-    printf("[zuochunwei] %s abandonedPartialAggregation_ = true, aggregationPct:%f\n", __func__, aggregationPct);
+    printf("[zuochunwei] %s abandonedPartialAggregation_ = true, %s\n", __func__, buf);
     debug("maybeIncreasePartialAggregationMemoryUsage");
     return;
   }
@@ -372,7 +384,7 @@ void HashAggregation::maybeIncreasePartialAggregationMemoryUsage(
       extendedPartialAggregationMemoryUsage - groupingSet_->allocatedBytes());
 
   if (!pool()->maybeReserve(memoryToReserve)) {
-    printf("[zuochunwei] maybeReserve %ld return fasle\n", memoryToReserve);
+    printf("[zuochunwei] maybeReserve %ld return fasle %s\n", memoryToReserve, buf);
     return;
   }
   // Update the aggregation memory usage size limit on memory reservation
@@ -383,7 +395,7 @@ void HashAggregation::maybeIncreasePartialAggregationMemoryUsage(
       RuntimeCounter(
           maxPartialAggregationMemoryUsage_, RuntimeCounter::Unit::kBytes));
 
-  printf("[zuochunwei] maybeReserve %ld return true\n", memoryToReserve);
+  printf("[zuochunwei] maybeReserve %ld return true %s\n", memoryToReserve, buf);
   debug("maybeIncreasePartialAggregationMemoryUsageEnd");
 }
 
