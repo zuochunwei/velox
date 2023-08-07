@@ -202,7 +202,7 @@ void HashAggregation::debug(const std::string& str) {
       , (int)abandonPartialAggregationMinPct_
       , (int)pushdownChecked_
       , (int)mayPushdown_
-      , (long int)numOutputRows_
+      , (long int)numInputRows_
       , (long int)numInputVectors_
       , (long int)numOutputRows_
       );
@@ -348,7 +348,7 @@ void HashAggregation::resetPartialOutputIfNeed() {
 void HashAggregation::maybeIncreasePartialAggregationMemoryUsage(
     double aggregationPct) {
   // If more than this many are unique at full memory, give up on partial agg.
-  constexpr int32_t kPartialMinFinalPct = 40;
+  constexpr int32_t kPartialMinFinalPct = 20;
   VELOX_DCHECK(isPartialOutput_);
   // If size is at max and there still is not enough reduction, abandon partial
   // aggregation.
