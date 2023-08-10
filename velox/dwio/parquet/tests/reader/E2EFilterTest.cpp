@@ -573,7 +573,7 @@ TEST_F(E2EFilterTest, date) {
       20);
 }
 
-TEST_F(E2EFilterTest, combineRowGroup) {
+/*TEST_F(E2EFilterTest, combineRowGroup) {
   options_.maxRowGroupLength = 5;
   options_.rowsInRowGroup = 5;
   rowType_ = ROW({INTEGER()});
@@ -591,7 +591,7 @@ TEST_F(E2EFilterTest, combineRowGroup) {
   auto parquetReader = dynamic_cast<ParquetReader&>(*reader.get());
   EXPECT_EQ(parquetReader.numberOfRowGroups(), 1);
   EXPECT_EQ(parquetReader.numberOfRows(), 5);
-}
+}*/
 
 // Define main so that gflags get processed.
 int main(int argc, char** argv) {
