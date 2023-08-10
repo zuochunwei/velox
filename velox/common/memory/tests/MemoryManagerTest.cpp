@@ -120,7 +120,7 @@ TEST(MemoryManagerTest, addPoolWithArbitrator) {
   // The arbitrator capacity will be overridden by the memory manager's
   // capacity.
   arbitratorConfig.capacity = options.capacity;
-  const uint64_t initialPoolCapacity = arbitratorConfig.capacity / 8;
+  const uint64_t initialPoolCapacity = arbitratorConfig.capacity / 32;
   arbitratorConfig.initMemoryPoolCapacity = initialPoolCapacity;
   options.arbitratorFactory = [&]() {
     return MemoryArbitrator::create(arbitratorConfig);

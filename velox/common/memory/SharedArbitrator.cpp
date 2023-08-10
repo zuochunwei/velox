@@ -206,9 +206,6 @@ bool SharedArbitrator::ensureCapacity(
     return true;
   }
   const uint64_t reclaimedBytes = reclaim(requestor, targetBytes);
-  // NOTE: return the reclaimed bytes back to the arbitrator and let the memory
-  // arbitration process to grow the requestor's memory capacity accordingly.
-  incrementFreeCapacity(reclaimedBytes);
   // Check if the requestor has been aborted in reclaim operation above.
   if (requestor->aborted()) {
     ++numFailures_;
