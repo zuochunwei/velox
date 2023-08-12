@@ -59,7 +59,7 @@ class AggregationHook : public ValueHook {
 
   std::string toString() const override {
     char buf[256];
-    sprintf(buf, "AggregationHook kind:%d", (int)kind());
+    snprintf(buf, sizeof(buf), "AggregationHook kind:%d", (int)kind());
     return buf;
   }
 
@@ -131,8 +131,9 @@ class SumHook final : public AggregationHook {
 
   std::string toString() const override {
     char buf[256];
-    sprintf(
+    snprintf(
         buf,
+        sizeof(buf),
         "SumHook kind:%d TValue:%s TAggregate:%s",
         (int)kind(),
         typeid(TValue).name(),
@@ -182,9 +183,10 @@ class SimpleCallableHook final : public AggregationHook {
         updateSingleValue_(updateSingleValue) {}
 
   std::string toString() const override {
-    char buf[256];
-    sprintf(
+    char buf[384];
+    snprintf(
         buf,
+        sizeof(buf),
         "SimpleCallableHook kind:%d TValue:%s TAggregate:%s UpdateSingleValue:%s",
         (int)kind(),
         typeid(TValue).name(),
@@ -222,8 +224,9 @@ class MinMaxHook final : public AggregationHook {
 
   std::string toString() const override {
     char buf[256];
-    sprintf(
+    snprintf(
         buf,
+        sizeof(buf),
         "MinMaxHook kind:%d T:%s isMin:%d",
         (int)kind(),
         typeid(T).name(),
