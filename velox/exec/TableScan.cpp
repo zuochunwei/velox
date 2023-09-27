@@ -47,6 +47,8 @@ TableScan::TableScan(
                          ->queryConfig()
                          .preferredOutputBatchRows()) {
   connector_ = connector::getConnector(tableHandle_->connectorId());
+
+  std::cout << "[zcw] TableScan:" << toString() << std::endl;
 }
 
 RowVectorPtr TableScan::getOutput() {
@@ -180,6 +182,10 @@ RowVectorPtr TableScan::getOutput() {
       lockedStats->rawInputPositions = dataSource_->getCompletedRows();
       lockedStats->rawInputBytes = dataSource_->getCompletedBytes();
       lockedStats->fileSize = dataSource_->getFileSize();
+
+      std::cout << "[zcw] fileSize:" << lockedStats->fileSize
+                << " dataSource fileSize:" << dataSource_->getFileSize()
+                << std::endl;
 
       auto data = dataOptional.value();
       if (data) {

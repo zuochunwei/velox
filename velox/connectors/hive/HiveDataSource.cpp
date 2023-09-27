@@ -501,6 +501,8 @@ void HiveDataSource::addSplit(std::shared_ptr<ConnectorSplit> split) {
     readerOpts_.setFileFormat(split_->fileFormat);
   }
 
+  std::cout << "[zcw] " << readerOpts_.toString() << std::endl;
+
   reader_ = dwio::common::getReaderFactory(readerOpts_.getFileFormat())
                 ->createReader(std::move(input), readerOpts_);
 
