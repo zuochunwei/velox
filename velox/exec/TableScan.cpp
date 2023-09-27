@@ -184,8 +184,7 @@ RowVectorPtr TableScan::getOutput() {
       lockedStats->fileSize = dataSource_->getFileSize();
 
       std::cout << "[zcw] fileSize:" << lockedStats->fileSize
-                << " dataSource fileSize:" << dataSource_->getFileSize()
-                << std::endl;
+                << " rawInputBytes:" << lockedStats->rawInputBytes << std::endl;
 
       auto data = dataOptional.value();
       if (data) {
