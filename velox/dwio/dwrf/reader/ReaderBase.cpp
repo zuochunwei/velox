@@ -207,6 +207,9 @@ ReaderBase::ReaderBase(
 
   if (!cache_ && input_->shouldPrefetchStripes()) {
     auto numStripes = getFooter().stripesSize();
+    std::cout << "[zcw] shouldPrefetchStripes, numStripes:" << numStripes
+              << std::endl;
+
     for (auto i = 0; i < numStripes; i++) {
       const auto stripe = getFooter().stripes(i);
       input_->enqueue(

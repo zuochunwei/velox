@@ -135,6 +135,7 @@ RowVectorPtr TableScan::getOutput() {
           VELOX_CHECK(operatorCtx_->task()->isCancelled());
           return nullptr;
         }
+        std::cout << "[zcw] setFromDataSource\n";
         dataSource_->setFromDataSource(std::move(preparedDataSource));
       } else {
         dataSource_->addSplit(connectorSplit);
@@ -178,6 +179,8 @@ RowVectorPtr TableScan::getOutput() {
 
       lockedStats->rawInputPositions = dataSource_->getCompletedRows();
       lockedStats->rawInputBytes = dataSource_->getCompletedBytes();
+      lockedStats->fileSize = dataSource_->getFileSize();
+
       auto data = dataOptional.value();
       if (data) {
         if (data->size() > 0) {

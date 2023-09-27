@@ -486,6 +486,8 @@ void HiveDataSource::addSplit(std::shared_ptr<ConnectorSplit> split) {
 
   VLOG(1) << "Adding split " << split_->toString();
 
+  std::cout << "[zcw] split file:" << split_->filePath << std::endl;
+
   fileHandle_ = fileHandleFactory_->generate(split_->filePath).second;
   auto input = createBufferedInput(*fileHandle_, readerOpts_);
 
@@ -781,6 +783,7 @@ HiveDataSource::createBufferedInput(
     const FileHandle& fileHandle,
     const dwio::common::ReaderOptions& readerOpts) {
   if (auto* asyncCache = dynamic_cast<cache::AsyncDataCache*>(allocator_)) {
+    std::cout << "[zcw] AsyncDataCache CachedBufferedInput" << std::endl;
     return std::make_unique<dwio::common::CachedBufferedInput>(
         fileHandle.file,
         readerOpts.getMemoryPool(),
@@ -794,6 +797,9 @@ HiveDataSource::createBufferedInput(
         readerOpts.loadQuantum(),
         readerOpts.maxCoalesceDistance());
   }
+
+  std::cout << "[zcw] BufferedInput, name:" << fileHandle.file->getName()
+            << std::endl;
   return std::make_unique<dwio::common::BufferedInput>(
       fileHandle.file,
       readerOpts.getMemoryPool(),
