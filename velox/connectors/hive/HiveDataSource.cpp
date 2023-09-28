@@ -474,6 +474,12 @@ HiveDataSource::HiveDataSource(
   rowReaderOpts_.setScanSpec(scanSpec_);
   rowReaderOpts_.setMetadataFilter(metadataFilter_);
 
+  std::cout << "[zcw] fileSchema:" << readerOpts_.getFileSchema()->toString()
+            << " readerOutputType_:" << readerOutputType_->toString()
+            << " remainingFilterInputs size:" << remainingFilterInputs.size()
+            << " filter.size:" << filters.size() << " filterPushdownEnabled:"
+            << hiveTableHandle->isFilterPushdownEnabled() << std::endl;
+
   ioStats_ = std::make_shared<dwio::common::IoStatistics>();
 }
 
@@ -486,7 +492,7 @@ void HiveDataSource::addSplit(std::shared_ptr<ConnectorSplit> split) {
 
   VLOG(1) << "Adding split " << split_->toString();
 
-  std::cout << "[zcw] split file:" << split_->filePath << std::endl;
+  std::cout << "[zcw] add split:" << split_->filePath << std::endl;
 
   fileHandle_ = fileHandleFactory_->generate(split_->filePath).second;
   auto input = createBufferedInput(*fileHandle_, readerOpts_);

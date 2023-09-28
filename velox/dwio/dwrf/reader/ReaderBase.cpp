@@ -222,6 +222,12 @@ ReaderBase::ReaderBase(
     }
   }
 
+  std::cout << "[zcw] fileLength:" << fileLength_ << " psLength:" << psLength_
+            << " footerSize:" << footerSize << " cacheSize:" << cacheSize
+            << " tailSize:" << tailSize
+            << " shouldPreftchStripes:" << input_->shouldPrefetchStripes()
+            << " readSize:" << readSize << std::endl;
+
   // initialize file decrypter
   handler_ = DecryptionHandler::create(*footer_, decryptorFactory_.get());
 }

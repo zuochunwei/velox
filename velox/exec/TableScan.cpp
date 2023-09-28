@@ -48,7 +48,7 @@ TableScan::TableScan(
                          .preferredOutputBatchRows()) {
   connector_ = connector::getConnector(tableHandle_->connectorId());
 
-  std::cout << "[zcw] TableScan:" << toString() << std::endl;
+  std::cout << "[zcw] ==== " << toString() << " ====" << std::endl;
 }
 
 RowVectorPtr TableScan::getOutput() {

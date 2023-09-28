@@ -382,8 +382,8 @@ class ReaderOptions {
         << " prefetchMode:" << (int)prefetchMode
         << " loadQuantum_:" << (int)loadQuantum_
         << " directorySizeGuess:" << directorySizeGuess
-        << " filePreloadThreshold:" << filePreloadThreshold << std::endl;
-		return oss.str();
+        << " filePreloadThreshold:" << filePreloadThreshold;
+    return oss.str();
   }
 
  public:
