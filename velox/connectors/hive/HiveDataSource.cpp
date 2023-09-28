@@ -414,9 +414,17 @@ HiveDataSource::HiveDataSource(
   SubfieldFilters filters;
   core::TypedExprPtr remainingFilter;
   if (hiveTableHandle->isFilterPushdownEnabled()) {
+    std::ostringstream oss;
+    oss << "collect ";
     for (auto& [k, v] : hiveTableHandle->subfieldFilters()) {
+      oss << k.toString() << " -> " << v->toString() << "\n";
       filters.emplace(k.clone(), v->clone());
     }
+
+    std::cout << "[zcw] " << oss.str();
+    std::cout << "[zcw] remainingFilter:"
+              << hiveTableHandle->remainingFilter()->toString() << std::endl;
+
     remainingFilter = extractFiltersFromRemainingFilter(
         hiveTableHandle->remainingFilter(),
         expressionEvaluator_,
@@ -434,6 +442,11 @@ HiveDataSource::HiveDataSource(
     }
   }
 
+  for (auto& [k, v] : filters) {
+    std::cout << "[zcw] iterator " << k.toString() << " -> " << v->toString()
+              << "\n";
+  }
+
   auto outputTypes = outputType_->children();
   readerOutputType_ = ROW(std::move(columnNames), std::move(outputTypes));
   scanSpec_ = makeScanSpec(
@@ -442,6 +455,9 @@ HiveDataSource::HiveDataSource(
       hiveColumnHandles,
       remainingFilterInputs,
       pool_);
+
+  std::cout << "[zcw] readerOutputType_:" << readerOutputType_->toString()
+            << std::endl;
 
   if (remainingFilter) {
     metadataFilter_ = std::make_shared<common::MetadataFilter>(

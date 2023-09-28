@@ -109,6 +109,8 @@ RowVectorPtr TableScan::getOutput() {
             tableHandle_,
             columnHandles_,
             connectorQueryCtx_.get());
+        std::cout << "[zcw] pendingDynamicFilters_.size="
+                  << pendingDynamicFilters_.size() << std::endl;
         for (const auto& entry : pendingDynamicFilters_) {
           dataSource_->addDynamicFilter(entry.first, entry.second);
         }
